@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: '◉',  key: 'nav.dashboard'    },
   { to: '/transactions', icon: '↕',  key: 'nav.transactions' },
+  { to: '/import',       icon: '📥', key: 'nav.import'       },
   { to: '/budget',       icon: '◎',  key: 'nav.budget'       },
   { to: '/investments',  icon: '↗',  key: 'nav.investments'  },
   { to: '/settings',     icon: '⚙',  key: 'nav.settings'     },
