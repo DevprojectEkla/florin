@@ -6,7 +6,13 @@ import {
   useUnclassifiedCount,
   useMonthlyAggregates,
   useCategoryAggregates,
+  useTransactions,
+  useUpdateTransactionCategory,
 } from '../hooks/useTransactions';
+import { useActiveCategories } from '../hooks/useCategories';
+import { splitLabel } from '../lib/utils';
+import type { TransactionWithCategory } from '../db/transactions';
+import type { Category } from '../types';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -18,6 +24,7 @@ export default function Dashboard() {
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
   const [viewYear, setViewYear]   = useState(now.getFullYear());
   const [showYearOverview, setShowYearOverview] = useState(false);
+  const [drilldownCategoryId, setDrilldownCategoryId] = useState<number | null | undefined>(undefined);
 
   const { data: unclassified = 0 } = useUnclassifiedCount(fyId);
   const { data: monthly = [] }     = useMonthlyAggregates(fyId);
@@ -124,27 +131,46 @@ export default function Dashboard() {
       {monthExpenses.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_by_category')}</h2>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {monthExpenses.map((cat) => {
               const maxVal = monthExpenses[0]?.total ?? 1;
+              const isOpen = drilldownCategoryId === cat.category_id;
               return (
-                <div key={cat.category_id ?? 'null'} className="flex items-center gap-3">
-                  <span className="w-6 text-center text-sm">{cat.category_icon ?? '🔖'}</span>
-                  <span className="w-32 text-sm text-slate-200 truncate">
-                    {cat.category_label ?? t('transaction.unclassified')}
-                  </span>
-                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${(cat.total / maxVal) * 100}%`,
-                        backgroundColor: cat.category_color ?? '#64748b',
-                      }}
+                <div key={cat.category_id ?? 'null'}>
+                  <button
+                    className={`w-full flex items-center gap-3 py-2 px-2 rounded-lg transition-colors text-left ${
+                      isOpen ? 'bg-slate-700/60' : 'hover:bg-slate-700/30'
+                    }`}
+                    onClick={() => setDrilldownCategoryId(isOpen ? undefined : cat.category_id)}
+                  >
+                    <span className="w-6 text-center text-sm">{cat.category_icon ?? '🔖'}</span>
+                    <span className="w-32 text-sm text-slate-200 truncate">
+                      {cat.category_label ?? t('transaction.unclassified')}
+                    </span>
+                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(cat.total / maxVal) * 100}%`,
+                          backgroundColor: cat.category_color ?? '#64748b',
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm font-mono text-slate-300 w-16 text-right">
+                      {cat.total.toFixed(0)} €
+                    </span>
+                    <span className="text-xs text-slate-500 w-4">{isOpen ? '▼' : '▶'}</span>
+                  </button>
+
+                  {/* Drilldown: transactions for this category */}
+                  {isOpen && (
+                    <CategoryDrilldown
+                      fyId={fyId}
+                      categoryId={cat.category_id}
+                      year={viewYear}
+                      month={viewMonth}
                     />
-                  </div>
-                  <span className="text-sm font-mono text-slate-300 w-16 text-right">
-                    {cat.total.toFixed(0)} €
-                  </span>
+                  )}
                 </div>
               );
             })}
@@ -236,6 +262,80 @@ function KpiCard({ label, value, icon, color }: {
         <div className="text-xs text-slate-500">{label}</div>
         <div className={`text-lg font-bold ${color ?? 'text-slate-100'}`}>{value}</div>
       </div>
+    </div>
+  );
+}
+
+
+// ─── Category Drilldown ──────────────────────────────────────────────────────
+
+function CategoryDrilldown({ fyId, categoryId, year, month }: {
+  fyId: number | null; categoryId: number | null; year: number; month: number;
+}) {
+  const { t } = useTranslation();
+  const { data: categories = [] } = useActiveCategories();
+  const updateCategory = useUpdateTransactionCategory();
+
+  const { data: transactions = [], isLoading } = useTransactions(fyId, {
+    year, month, categoryId: categoryId ?? undefined,
+    unclassifiedOnly: categoryId === null,
+  });
+
+  if (isLoading) {
+    return <div className="py-3 px-8 text-slate-500 text-xs">{t('common.loading')}</div>;
+  }
+
+  if (transactions.length === 0) {
+    return <div className="py-3 px-8 text-slate-500 text-xs">{t('common.empty')}</div>;
+  }
+
+  return (
+    <div className="ml-8 mr-2 my-2 border-l-2 border-slate-600 pl-3 space-y-0.5">
+      {transactions.map((tx) => (
+        <DrilldownRow
+          key={tx.id}
+          tx={tx}
+          categories={categories}
+          onCategoryChange={(catId) => updateCategory.mutate({ id: tx.id, categoryId: catId })}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DrilldownRow({ tx, categories, onCategoryChange }: {
+  tx: TransactionWithCategory;
+  categories: Category[];
+  onCategoryChange: (categoryId: number | null) => void;
+}) {
+  const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
+
+  return (
+    <div className="flex items-center gap-2 py-1 group">
+      <span className="text-xs text-slate-500 font-mono w-20 flex-shrink-0">{tx.date}</span>
+      <span className="text-xs text-slate-500 bg-slate-700/50 px-1 rounded flex-shrink-0">{type}</span>
+      <span className="text-xs text-slate-300 flex-1 truncate" title={tx.label}>{detail}</span>
+      <span className="text-xs font-mono w-16 text-right flex-shrink-0">
+        {tx.debit ? (
+          <span className="text-red-400">{tx.debit.toFixed(2)}</span>
+        ) : (
+          <span className="text-green-400">+{tx.credit?.toFixed(2)}</span>
+        )}
+      </span>
+      <select
+        className="bg-transparent border border-slate-600 rounded px-1.5 py-0.5 text-xs text-slate-300 w-36 flex-shrink-0
+                   opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+        value={tx.category_id ?? ''}
+        onChange={(e) => {
+          const val = e.target.value;
+          onCategoryChange(val ? parseInt(val) : null);
+        }}
+      >
+        <option value="">—</option>
+        {categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>
+        ))}
+      </select>
     </div>
   );
 }
