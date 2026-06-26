@@ -30,6 +30,13 @@ export default function App() {
             await i18n.changeLanguage(langRows[0].value);
           }
         }
+
+        // Dev mode: seed default password so we skip setup screen
+        if (import.meta.env.DEV) {
+          const { devSeedAuth } = await import('./db/dev-seed');
+          await devSeedAuth();
+        }
+
         // Check if password is set
         const hash = await getPasswordHash();
         if (!hash) {
