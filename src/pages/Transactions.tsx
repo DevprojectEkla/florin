@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { useFirstAccount, useActiveFiscalYear } from '../hooks/useAccounts';
+import { useFiscalYear } from '../store/FiscalYearContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
 import type { TransactionWithCategory } from '../db/transactions';
@@ -12,12 +12,11 @@ export default function Transactions() {
   const [searchParams] = useSearchParams();
   const filterUnclassified = searchParams.get('filter') === 'unclassified';
 
-  const { data: account } = useFirstAccount();
-  const { data: fiscalYear } = useActiveFiscalYear(account?.id);
+  const { selectedId: fyId } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
 
   const { data: transactions = [], isLoading } = useTransactions(
-    fiscalYear?.id,
+    fyId,
     filterUnclassified ? { unclassifiedOnly: true } : undefined
   );
 
@@ -43,7 +42,7 @@ export default function Transactions() {
     return list;
   }, [transactions, showFilter, search]);
 
-  if (!fiscalYear) {
+  if (!fyId) {
     return (
       <div className="p-6">
         <div className="card text-slate-400">{t('dashboard.no_data')}</div>

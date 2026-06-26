@@ -9,12 +9,17 @@ export interface TransactionWithCategory extends Transaction {
 }
 
 export async function getTransactions(
-  fiscalYearId: number,
+  fiscalYearId: number | null,
   opts?: { month?: number; year?: number; categoryId?: number; unclassifiedOnly?: boolean }
 ): Promise<TransactionWithCategory[]> {
   const db = await getDb();
-  const conditions: string[] = ['t.fiscal_year_id = ?'];
-  const params: unknown[] = [fiscalYearId];
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (fiscalYearId !== null) {
+    conditions.push('t.fiscal_year_id = ?');
+    params.push(fiscalYearId);
+  }
 
   if (opts?.month && opts?.year) {
     conditions.push("strftime('%m', t.date) = ?");
@@ -40,14 +45,18 @@ export async function getTransactions(
             c.type as category_type
      FROM transactions t
      LEFT JOIN categories c ON c.id = t.category_id
-     WHERE ${conditions.join(' AND ')}
+     ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
      ORDER BY t.date DESC, t.id DESC`,
     params
   );
 }
 
-export async function getTransactionCount(fiscalYearId: number): Promise<number> {
+export async function getTransactionCount(fiscalYearId: number | null): Promise<number> {
   const db = await getDb();
+  if (fiscalYearId === null) {
+    const rows = await db.select<{ n: number }[]>('SELECT COUNT(*) as n FROM transactions');
+    return rows[0]?.n ?? 0;
+  }
   const rows = await db.select<{ n: number }[]>(
     'SELECT COUNT(*) as n FROM transactions WHERE fiscal_year_id = ?',
     [fiscalYearId]
@@ -55,8 +64,12 @@ export async function getTransactionCount(fiscalYearId: number): Promise<number>
   return rows[0]?.n ?? 0;
 }
 
-export async function getUnclassifiedCount(fiscalYearId: number): Promise<number> {
+export async function getUnclassifiedCount(fiscalYearId: number | null): Promise<number> {
   const db = await getDb();
+  if (fiscalYearId === null) {
+    const rows = await db.select<{ n: number }[]>('SELECT COUNT(*) as n FROM transactions WHERE category_id IS NULL');
+    return rows[0]?.n ?? 0;
+  }
   const rows = await db.select<{ n: number }[]>(
     'SELECT COUNT(*) as n FROM transactions WHERE fiscal_year_id = ? AND category_id IS NULL',
     [fiscalYearId]
@@ -85,8 +98,10 @@ export interface MonthlyAggregate {
   net: number;
 }
 
-export async function getMonthlyAggregates(fiscalYearId: number): Promise<MonthlyAggregate[]> {
+export async function getMonthlyAggregates(fiscalYearId: number | null): Promise<MonthlyAggregate[]> {
   const db = await getDb();
+  const where = fiscalYearId !== null ? 'WHERE fiscal_year_id = ?' : '';
+  const params = fiscalYearId !== null ? [fiscalYearId] : [];
   return db.select<MonthlyAggregate[]>(
     `SELECT
        CAST(strftime('%Y', date) AS INTEGER) as year,
@@ -95,10 +110,10 @@ export async function getMonthlyAggregates(fiscalYearId: number): Promise<Monthl
        COALESCE(SUM(credit), 0) as total_credit,
        COALESCE(SUM(credit), 0) - COALESCE(SUM(debit), 0) as net
      FROM transactions
-     WHERE fiscal_year_id = ?
+     ${where}
      GROUP BY year, month
      ORDER BY year, month`,
-    [fiscalYearId]
+    params
   );
 }
 
@@ -112,13 +127,18 @@ export interface CategoryAggregate {
 }
 
 export async function getCategoryAggregates(
-  fiscalYearId: number,
+  fiscalYearId: number | null,
   year?: number,
   month?: number
 ): Promise<CategoryAggregate[]> {
   const db = await getDb();
-  const conditions: string[] = ['t.fiscal_year_id = ?'];
-  const params: unknown[] = [fiscalYearId];
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (fiscalYearId !== null) {
+    conditions.push('t.fiscal_year_id = ?');
+    params.push(fiscalYearId);
+  }
 
   if (month && year) {
     conditions.push("CAST(strftime('%m', t.date) AS INTEGER) = ?");
@@ -137,7 +157,7 @@ export async function getCategoryAggregates(
        COALESCE(SUM(t.debit), 0) - COALESCE(SUM(t.credit), 0) as total
      FROM transactions t
      LEFT JOIN categories c ON c.id = t.category_id
-     WHERE ${conditions.join(' AND ')}
+     ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
      GROUP BY t.category_id
      HAVING total != 0
      ORDER BY total DESC`,
