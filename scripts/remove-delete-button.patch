@@ -1,0 +1,21 @@
+--- a/src/pages/Investments.tsx
++++ b/src/pages/Investments.tsx
+@@ -132,7 +132,6 @@
+                 <th className="px-3 py-2.5 text-left">{t('portfolio.sector')}</th>
+                 <th className="px-3 py-2.5 text-left w-24">{t('portfolio.risk')}</th>
+                 <th className="px-3 py-2.5 text-right w-24">{t('portfolio.amount')}</th>
+-                <th className="px-3 py-2.5 w-10"></th>
+               </tr>
+             </thead>
+             <tbody className="divide-y divide-slate-700/50">
+@@ -153,11 +152,6 @@
+                   </td>
+                   <td className="px-3 py-2 text-right font-mono text-slate-200">{pos.amount.toFixed(0)} €</td>
+-                  <td className="px-3 py-2">
+-                    <button
+-                      className="text-xs text-slate-500 hover:text-red-400"
+-                      onClick={() => deletePositionMut.mutate(pos.id)}
+-                    >🗑️</button>
+-                  </td>
+                 </tr>
+               ))}

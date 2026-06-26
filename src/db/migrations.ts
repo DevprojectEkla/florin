@@ -146,4 +146,25 @@ export const MIGRATIONS: string[] = [
   -- Clean up old location
   DELETE FROM app_settings WHERE key = 'password_hash';
   `,
+
+  // ── Migration 003 — balance correction metadata ──────────────────────────
+  `
+  -- Add metadata columns to fiscal_years for balance tracking
+  ALTER TABLE fiscal_years ADD COLUMN balance_verified_at TEXT;
+  ALTER TABLE fiscal_years ADD COLUMN balance_source TEXT;
+  
+  -- Add notes column to track balance adjustments
+  ALTER TABLE fiscal_years ADD COLUMN notes TEXT;
+  
+  -- Create balance audit log table
+  CREATE TABLE IF NOT EXISTS balance_audit_log (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    fiscal_year_id  INTEGER NOT NULL REFERENCES fiscal_years(id),
+    adjustment_date TEXT NOT NULL DEFAULT (datetime('now')),
+    old_opening_balance REAL,
+    new_opening_balance REAL,
+    reason TEXT NOT NULL,
+    performed_by TEXT DEFAULT 'system'
+  );
+  `,
 ];

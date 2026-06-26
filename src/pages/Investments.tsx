@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import {
   useVehicleSummaries, useRiskBreakdown, useAllPositions,
-  useCreateVehicle, useCreatePosition, useDeletePosition,
+  useCreateVehicle, useCreatePosition, // useDeletePosition,
 } from '../hooks/usePortfolio';
 import Modal from '../components/ui/Modal';
 
@@ -29,7 +29,7 @@ export default function Investments() {
 
   const createVehicleMut = useCreateVehicle();
   const createPositionMut = useCreatePosition();
-  const deletePositionMut = useDeletePosition();
+  // const deletePositionMut = useDeletePosition(); // Removed
 
   const grandTotal = summaries.reduce((s, v) => s + v.total, 0);
 
@@ -132,7 +132,6 @@ export default function Investments() {
                 <th className="px-3 py-2.5 text-left">{t('portfolio.sector')}</th>
                 <th className="px-3 py-2.5 text-left w-24">{t('portfolio.risk')}</th>
                 <th className="px-3 py-2.5 text-right w-24">{t('portfolio.amount')}</th>
-                <th className="px-3 py-2.5 w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
@@ -152,12 +151,6 @@ export default function Investments() {
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-slate-200">{pos.amount.toFixed(0)} €</td>
-                  <td className="px-3 py-2">
-                    <button
-                      className="text-xs text-slate-500 hover:text-red-400"
-                      onClick={() => deletePositionMut.mutate(pos.id)}
-                    >��️</button>
-                  </td>
                 </tr>
               ))}
             </tbody>
