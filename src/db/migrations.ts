@@ -166,12 +166,23 @@ export const MIGRATIONS: string[] = [
   DROP TABLE categories;
   ALTER TABLE categories_new RENAME TO categories;
 
-  -- Add capital investment categories
-  INSERT INTO categories (slug, label, type, color, icon, is_system, sort_order) VALUES
-    ('capital.furniture', 'Mobilier', 'capital', '#8b5cf6', '🛋️', 0, 600),
-    ('capital.tech', 'Informatique & Électronique', 'capital', '#3b82f6', '💻', 0, 601),
-    ('capital.clothing', 'Vêtements', 'capital', '#ec4899', '👔', 0, 602),
-    ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 603),
-    ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 604);
+  -- Add capital investment categories (INSERT OR IGNORE to avoid duplicates)
+  INSERT OR IGNORE INTO categories (slug, label, type, color, icon, is_system, is_active, sort_order) VALUES
+    ('capital.furniture', 'Mobilier', 'capital', '#8b5cf6', '🛋️', 0, 1, 600),
+    ('capital.tech', 'Informatique & Électronique', 'capital', '#3b82f6', '💻', 0, 1, 601),
+    ('capital.clothing', 'Vêtements', 'capital', '#ec4899', '👔', 0, 1, 602),
+    ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 1, 603),
+    ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 1, 604);
+  `,
+
+  // ── Migration 004 — ensure capital categories exist ──────────────────────
+  `
+  -- Insert capital categories if they don't exist (in case migration 003 didn't insert them)
+  INSERT OR IGNORE INTO categories (slug, label, type, color, icon, is_system, is_active, sort_order) VALUES
+    ('capital.furniture', 'Mobilier', 'capital', '#8b5cf6', '🛋️', 0, 1, 600),
+    ('capital.tech', 'Informatique & Électronique', 'capital', '#3b82f6', '💻', 0, 1, 601),
+    ('capital.clothing', 'Vêtements', 'capital', '#ec4899', '👔', 0, 1, 602),
+    ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 1, 603),
+    ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 1, 604);
   `,
 ];
