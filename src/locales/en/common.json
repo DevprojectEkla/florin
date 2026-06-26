@@ -171,7 +171,8 @@
     "no_budget_set":   "No budget set — go to the \"Setup\" tab to get started",
     "setup_title":     "Monthly budget per category",
     "total":           "Total",
-    "saved":           "Saved"
+    "saved":           "Saved",
+    "prefill_from":    "Pre-fill from"
   },
   "fiscal_year": {
     "all_years": "All years"

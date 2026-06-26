@@ -135,3 +135,41 @@ export async function getBudgetSummary(
     percentage: total_budgeted > 0 ? (total_actual / total_budgeted) * 100 : 0,
   };
 }
+
+// ─── Pre-fill from historical averages ───────────────────────────────────────
+
+/**
+ * Compute average monthly spending per expense category from a fiscal year's
+ * actual transaction data. Used to pre-fill budget targets based on real history.
+ */
+export async function computeAveragesFromHistory(
+  fiscalYearId: number
+): Promise<{ categoryId: number; average: number }[]> {
+  const db = await getDb();
+
+  // Count distinct months with transaction data
+  const months = await db.select<{ n: number }[]>(
+    `SELECT COUNT(DISTINCT strftime('%Y-%m', date)) as n
+     FROM transactions WHERE fiscal_year_id = ?`,
+    [fiscalYearId]
+  );
+  const monthCount = Math.max(months[0]?.n ?? 1, 1);
+
+  // Total spending per expense category (debits only)
+  const totals = await db.select<{ category_id: number; total: number }[]>(
+    `SELECT t.category_id, COALESCE(SUM(t.debit), 0) as total
+     FROM transactions t
+     JOIN categories c ON c.id = t.category_id
+     WHERE t.fiscal_year_id = ?
+       AND t.debit IS NOT NULL
+       AND c.type IN ('fixed', 'variable')
+       AND t.category_id IS NOT NULL
+     GROUP BY t.category_id`,
+    [fiscalYearId]
+  );
+
+  return totals.map((row) => ({
+    categoryId: row.category_id,
+    average: Math.round(row.total / monthCount),
+  }));
+}

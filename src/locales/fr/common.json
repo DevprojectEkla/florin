@@ -171,7 +171,8 @@
     "no_budget_set":   "Aucun budget défini — allez dans l'onglet \"Définir\" pour commencer",
     "setup_title":     "Budget mensuel par catégorie",
     "total":           "Total",
-    "saved":           "Enregistré"
+    "saved":           "Enregistré",
+    "prefill_from":    "Pré-remplir depuis"
   },
   "fiscal_year": {
     "all_years": "Toutes les années"
