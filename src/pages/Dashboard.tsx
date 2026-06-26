@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useFiscalYear } from '../store/FiscalYearContext';
@@ -27,6 +27,13 @@ export default function Dashboard() {
   const [showYearOverview, setShowYearOverview] = useState(false);
   const [drilldownCategoryId, setDrilldownCategoryId] = useState<number | null | undefined>(undefined);
 
+  // When switching to "all years" mode, automatically show year overview
+  useEffect(() => {
+    if (fyId === null) {
+      setShowYearOverview(true);
+    }
+  }, [fyId]);
+
   const { data: unclassified = 0 } = useUnclassifiedCount(fyId);
   const { data: monthly = [] }     = useMonthlyAggregates(fyId);
   const { data: monthCategories = [] } = useCategoryAggregates(fyId, viewYear, viewMonth);
@@ -36,12 +43,19 @@ export default function Dashboard() {
     (m) => m.year === viewYear && m.month === viewMonth
   );
 
-  // Year totals
+  // Year totals (or all-years totals when fyId === null)
   const yearTotals = {
     debit: monthly.reduce((s, m) => s + m.total_debit, 0),
     credit: monthly.reduce((s, m) => s + m.total_credit, 0),
     net: monthly.reduce((s, m) => s + m.net, 0),
   };
+
+  // Average per month
+  const avgPerMonth = monthly.length > 0 ? {
+    debit: yearTotals.debit / monthly.length,
+    credit: yearTotals.credit / monthly.length,
+    net: yearTotals.net / monthly.length,
+  } : { debit: 0, credit: 0, net: 0 };
 
   // Month expenses (positive = spent)
   const monthExpenses = monthCategories
@@ -75,64 +89,130 @@ export default function Dashboard() {
     );
   }
 
+  // When fyId is null, we're in "all years" mode
+  const isAllYearsMode = fyId === null;
+
   return (
     <div className="p-6 space-y-5">
-      {/* Header with month picker */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button className="btn-ghost px-2 py-1" onClick={prevMonth}>←</button>
-          <h1 className="text-xl font-bold text-slate-100">
-            {t(`months.${viewMonth}`)} {viewYear}
-          </h1>
-          <button className="btn-ghost px-2 py-1" onClick={nextMonth}>→</button>
-        </div>
-        <div className="flex items-center gap-3">
-          {unclassified > 0 && (
+      {/* Header with month picker - hidden in all years mode */}
+      {!isAllYearsMode && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button className="btn-ghost px-2 py-1" onClick={prevMonth}>←</button>
+            <h1 className="text-xl font-bold text-slate-100">
+              {t(`months.${viewMonth}`)} {viewYear}
+            </h1>
+            <button className="btn-ghost px-2 py-1" onClick={nextMonth}>→</button>
+          </div>
+          <div className="flex items-center gap-3">
+            {unclassified > 0 && (
+              <button
+                className="badge bg-amber-500/15 text-amber-400 px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-500/25"
+                onClick={() => navigate('/transactions?filter=unclassified')}
+              >
+                ⚠️ {unclassified} {t('dashboard.unclassified')}
+              </button>
+            )}
             <button
-              className="badge bg-amber-500/15 text-amber-400 px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-500/25"
-              onClick={() => navigate('/transactions?filter=unclassified')}
+              className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
+                showYearOverview ? 'bg-florin-500/20 text-florin-400' : 'bg-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+              onClick={() => setShowYearOverview(!showYearOverview)}
             >
-              ⚠️ {unclassified} {t('dashboard.unclassified')}
+              {t('dashboard.year_view')}
             </button>
-          )}
-          <button
-            className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
-              showYearOverview ? 'bg-florin-500/20 text-florin-400' : 'bg-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-            onClick={() => setShowYearOverview(!showYearOverview)}
-          >
-            {t('dashboard.year_view')}
-          </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Bank balance — always visible, independent of month/year */}
-      <BankBalanceCard />
+      {/* Header for all years mode */}
+      {isAllYearsMode && (
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-100">
+            {t('fiscal_year.all_years')}
+            <span className="ml-3 text-sm text-slate-400">
+              ({monthly.length} {t('dashboard.months_of_data')})
+            </span>
+          </h1>
+          <div className="flex items-center gap-3">
+            {unclassified > 0 && (
+              <button
+                className="badge bg-amber-500/15 text-amber-400 px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-500/25"
+                onClick={() => navigate('/transactions?filter=unclassified')}
+              >
+                ⚠️ {unclassified} {t('dashboard.unclassified')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
-      {/* Month KPIs */}
-      <div className="grid grid-cols-3 gap-4">
-        <KpiCard
-          label={t('dashboard.month_income')}
-          value={`${(currentMonthData?.total_credit ?? 0).toFixed(0)} €`}
-          icon="📈"
-          color="text-green-400"
-        />
-        <KpiCard
-          label={t('dashboard.month_expenses')}
-          value={`${(currentMonthData?.total_debit ?? 0).toFixed(0)} €`}
-          icon="📉"
-          color="text-red-400"
-        />
-        <KpiCard
-          label={t('dashboard.month_balance')}
-          value={`${(currentMonthData?.net ?? 0) >= 0 ? '+' : ''}${(currentMonthData?.net ?? 0).toFixed(0)} €`}
-          icon={(currentMonthData?.net ?? 0) >= 0 ? '✅' : '⚠️'}
-          color={(currentMonthData?.net ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}
-        />
-      </div>
+      {/* Bank balance — only visible for specific fiscal year */}
+      {!isAllYearsMode && <BankBalanceCard />}
 
-      {/* Month category breakdown */}
-      {monthExpenses.length > 0 && (
+      {/* Investments/Savings summary */}
+      <InvestmentsSummaryCard 
+        fyId={fyId} 
+        year={viewYear} 
+        month={viewMonth}
+        showYearTotal={showYearOverview || isAllYearsMode}
+      />
+
+      {/* KPIs: show month data OR all-years totals */}
+      {!isAllYearsMode ? (
+        // Month KPIs (specific fiscal year)
+        <div className="grid grid-cols-3 gap-4">
+          <KpiCard
+            label={t('dashboard.month_income')}
+            value={`${(currentMonthData?.total_credit ?? 0).toFixed(0)} €`}
+            icon="📈"
+            color="text-green-400"
+          />
+          <KpiCard
+            label={t('dashboard.month_expenses')}
+            value={`${(currentMonthData?.total_debit ?? 0).toFixed(0)} €`}
+            icon="📉"
+            color="text-red-400"
+          />
+          <KpiCard
+            label={t('dashboard.month_balance')}
+            value={`${(currentMonthData?.net ?? 0) >= 0 ? '+' : ''}${(currentMonthData?.net ?? 0).toFixed(0)} €`}
+            icon={(currentMonthData?.net ?? 0) >= 0 ? '✅' : '⚠️'}
+            color={(currentMonthData?.net ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}
+          />
+        </div>
+      ) : (
+        // All-years KPIs
+        <div className="grid grid-cols-4 gap-4">
+          <KpiCard
+            label={t('dashboard.total_income')}
+            value={`${yearTotals.credit.toFixed(0)} €`}
+            icon="📈"
+            color="text-green-400"
+          />
+          <KpiCard
+            label={t('dashboard.total_expenses')}
+            value={`${yearTotals.debit.toFixed(0)} €`}
+            icon="📉"
+            color="text-red-400"
+          />
+          <KpiCard
+            label={t('dashboard.total_balance')}
+            value={`${yearTotals.net >= 0 ? '+' : ''}${yearTotals.net.toFixed(0)} €`}
+            icon={yearTotals.net >= 0 ? '✅' : '⚠️'}
+            color={yearTotals.net >= 0 ? 'text-green-400' : 'text-red-400'}
+          />
+          <KpiCard
+            label={t('dashboard.avg_per_month')}
+            value={`${avgPerMonth.net >= 0 ? '+' : ''}${avgPerMonth.net.toFixed(0)} €`}
+            icon="📊"
+            color={avgPerMonth.net >= 0 ? 'text-florin-400' : 'text-orange-400'}
+          />
+        </div>
+      )}
+
+      {/* Month category breakdown - only for specific fiscal year */}
+      {!isAllYearsMode && monthExpenses.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_by_category')}</h2>
           <div className="space-y-1">
@@ -182,8 +262,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Month income */}
-      {monthIncome.length > 0 && (
+      {/* Month income - only for specific fiscal year */}
+      {!isAllYearsMode && monthIncome.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_income')}</h2>
           <div className="space-y-1">
@@ -202,15 +282,15 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* No data for this month */}
-      {!currentMonthData && monthExpenses.length === 0 && (
+      {/* No data for this month - only for specific fiscal year */}
+      {!isAllYearsMode && !currentMonthData && monthExpenses.length === 0 && (
         <div className="card text-center py-8 text-slate-500">
           {t('dashboard.no_month_data')}
         </div>
       )}
 
-      {/* Year overview (toggle) */}
-      {showYearOverview && monthly.length > 0 && (
+      {/* Year overview (toggle or always visible in all-years mode) */}
+      {(showYearOverview || isAllYearsMode) && monthly.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-medium text-slate-400">{t('dashboard.monthly_overview')}</h2>
@@ -378,6 +458,121 @@ function BankBalanceCard() {
             {balanceData.transactionCount} tx {balanceData.startDate ? `(${t('dashboard.since')} ${balanceData.startDate})` : ''}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Investments Summary Card ────────────────────────────────────────────────
+
+function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: { 
+  fyId: number | null; 
+  year: number; 
+  month: number;
+  showYearTotal: boolean;
+}) {
+  const { t } = useTranslation();
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const { data: transactions = [] } = useTransactions(fyId, showYearTotal ? {} : { year, month });
+
+  if (!transactions || transactions.length === 0) return null;
+
+  // Calculate investments by savings category
+  const investments = transactions
+    .filter(tx => tx.category_type === 'savings' && tx.debit && tx.debit > 0)
+    .reduce((acc, tx) => {
+      const key = tx.category_slug || 'unknown';
+      if (!acc[key]) {
+        acc[key] = {
+          label: tx.category_label || 'Unknown',
+          icon: tx.category_icon || '💰',
+          total: 0,
+          count: 0,
+          transactions: [],
+        };
+      }
+      acc[key].total += tx.debit || 0;
+      acc[key].count += 1;
+      acc[key].transactions.push(tx);
+      return acc;
+    }, {} as Record<string, { label: string; icon: string; total: number; count: number; transactions: TransactionWithCategory[] }>);
+
+  const investmentsList = Object.entries(investments)
+    .sort((a, b) => b[1].total - a[1].total);
+
+  const totalInvestments = investmentsList.reduce((sum, [, inv]) => sum + inv.total, 0);
+
+  if (investmentsList.length === 0) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-emerald-900/20 to-emerald-800/10 rounded-xl border border-emerald-700/30 px-5 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <span className="text-xs text-emerald-400/70 uppercase tracking-wider">
+            {showYearTotal 
+              ? t('dashboard.investments_summary_year') 
+              : t('dashboard.investments_summary_month')}
+          </span>
+          <div className="text-2xl font-bold mt-0.5 text-emerald-400">
+            {totalInvestments.toFixed(2)} €
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2 mt-3">
+        {investmentsList.map(([slug, inv]) => {
+          const isExpanded = expandedSlug === slug;
+          return (
+            <div key={slug}>
+              <button
+                onClick={() => setExpandedSlug(isExpanded ? null : slug)}
+                className={`w-full bg-slate-800/40 rounded-lg px-3 py-2 border border-slate-700/50 hover:bg-slate-800/60 transition-colors text-left ${
+                  isExpanded ? 'border-emerald-600/50' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <span className="text-lg">{inv.icon}</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-slate-300 font-medium">{inv.label}</div>
+                      <div className="text-xs text-slate-500">
+                        {inv.count} {inv.count === 1 ? 'versement' : 'versements'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-lg font-bold text-emerald-400">
+                      {inv.total.toFixed(0)} €
+                    </div>
+                    <span className="text-xs text-slate-500 w-4">{isExpanded ? '▼' : '▶'}</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Drilldown: transaction details */}
+              {isExpanded && (
+                <div className="ml-8 mr-2 my-2 border-l-2 border-emerald-600/30 pl-3 space-y-0.5">
+                  {inv.transactions
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .map((tx) => {
+                      const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
+                      return (
+                        <div key={tx.id} className="flex items-center gap-2 py-1 text-sm">
+                          <span className="text-xs text-slate-500 font-mono w-20 flex-shrink-0">{tx.date}</span>
+                          <span className="text-xs text-emerald-600/70 bg-emerald-900/20 px-1.5 py-0.5 rounded flex-shrink-0">{type}</span>
+                          <span className="text-xs text-slate-300 flex-1 truncate" title={tx.label}>{detail}</span>
+                          <span className="text-xs font-mono text-emerald-400 w-20 text-right flex-shrink-0">
+                            {tx.debit?.toFixed(2)} €
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
