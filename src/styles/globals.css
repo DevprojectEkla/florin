@@ -27,7 +27,10 @@
     user-select: text;
   }
 
-  /* Fix native select dropdown colors on dark backgrounds */
+  /* Fix native select dropdown colors on dark backgrounds (WebKit/Tauri) */
+  select {
+    color-scheme: dark;
+  }
   select option {
     background-color: #1e293b;
     color: #e2e8f0;
