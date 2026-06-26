@@ -16,7 +16,7 @@ import type { Category, CategoryType } from '../types';
 const SECTION_KEYS = ['categories', 'rules', 'language'] as const;
 type Section = typeof SECTION_KEYS[number];
 
-const TYPE_ORDER: CategoryType[] = ['income', 'fixed', 'variable', 'savings', 'transfer'];
+const TYPE_ORDER: CategoryType[] = ['income', 'fixed', 'variable', 'savings', 'capital', 'transfer'];
 
 export default function Settings() {
   const { t } = useTranslation();
