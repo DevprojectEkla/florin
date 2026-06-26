@@ -6,6 +6,7 @@ const TYPE_STYLES: Record<CategoryType, string> = {
   variable: 'bg-blue-500/15 text-blue-400',
   savings:  'bg-yellow-500/15 text-yellow-400',
   transfer: 'bg-slate-500/15 text-slate-400',
+  capital:  'bg-purple-500/15 text-purple-400',
 };
 
 interface TypeBadgeProps {
