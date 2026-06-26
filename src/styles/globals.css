@@ -27,6 +27,12 @@
     user-select: text;
   }
 
+  /* Fix native select dropdown colors on dark backgrounds */
+  select option {
+    background-color: #1e293b;
+    color: #e2e8f0;
+  }
+
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { @apply bg-slate-800; }
