@@ -10,6 +10,7 @@ import {
   useUpdateTransactionCategory,
 } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
+import { useCurrentBalance } from '../hooks/useBalance';
 import { splitLabel } from '../lib/utils';
 import type { TransactionWithCategory } from '../db/transactions';
 import type { Category } from '../types';
@@ -104,6 +105,9 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Bank balance — always visible, independent of month/year */}
+      <BankBalanceCard />
 
       {/* Month KPIs */}
       <div className="grid grid-cols-3 gap-4">
@@ -336,6 +340,45 @@ function DrilldownRow({ tx, categories, onCategoryChange }: {
           <option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>
         ))}
       </select>
+    </div>
+  );
+}
+
+
+// ─── Bank Balance Card ───────────────────────────────────────────────────────
+
+function BankBalanceCard() {
+  const { t } = useTranslation();
+  const { data: balanceData } = useCurrentBalance();
+
+  if (!balanceData) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-slate-800 to-slate-800/80 rounded-xl border border-slate-700 px-5 py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-xs text-slate-500 uppercase tracking-wider">{t('dashboard.bank_balance')}</span>
+          <div className={`text-2xl font-bold mt-0.5 ${
+            balanceData.balance >= 0 ? 'text-florin-400' : 'text-red-400'
+          }`}>
+            {balanceData.balance.toFixed(2)} €
+          </div>
+        </div>
+        <div className="text-right space-y-0.5">
+          <div className="text-xs text-slate-500">
+            {t('dashboard.opening_balance')}: {balanceData.openingBalance.toFixed(2)} €
+          </div>
+          <div className="text-xs text-green-400/70">
+            + {balanceData.totalCredits.toFixed(0)} €
+          </div>
+          <div className="text-xs text-red-400/70">
+            − {balanceData.totalDebits.toFixed(0)} €
+          </div>
+          <div className="text-xs text-slate-600">
+            {balanceData.transactionCount} tx {balanceData.startDate ? `(${t('dashboard.since')} ${balanceData.startDate})` : ''}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

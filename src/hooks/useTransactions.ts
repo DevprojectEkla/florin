@@ -63,6 +63,7 @@ export function useUpdateTransactionCategory() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['transactions'] });
       qc.invalidateQueries({ queryKey: ['aggregates'] });
+      qc.invalidateQueries({ queryKey: ['balance'] });
     },
   });
 }
