@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent: #eab308;
+  }
+
+  * {
+    @apply border-slate-700;
+  }
+
+  body {
+    @apply bg-slate-900 text-slate-100 font-sans antialiased;
+    /* Prevent text selection on UI chrome */
+    user-select: none;
+  }
+
+  /* Allow selection inside inputs and text areas */
+  input, textarea, [contenteditable] {
+    user-select: text;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-slate-800; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-500; }
+}
+
+@layer components {
+  .card {
+    @apply bg-slate-800 rounded-xl border border-slate-700 p-4;
+  }
+
+  .btn-primary {
+    @apply bg-florin-500 hover:bg-florin-400 text-slate-900 font-semibold
+           px-4 py-2 rounded-lg transition-colors duration-150 disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-slate-700 text-slate-300
+           px-4 py-2 rounded-lg transition-colors duration-150;
+  }
+
+  .input {
+    @apply bg-slate-700 border border-slate-600 rounded-lg px-3 py-2
+           text-slate-100 placeholder-slate-400 focus:outline-none
+           focus:ring-2 focus:ring-florin-500 focus:border-transparent w-full;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  .amount-debit  { @apply text-red-400 font-mono; }
+  .amount-credit { @apply text-green-400 font-mono; }
+  .amount-zero   { @apply text-slate-400 font-mono; }
+}
