@@ -195,5 +195,23 @@
     "opening_balance_hint":"Le solde de votre compte au premier jour de l'exercice",
     "error_fy_label":      "Le libellé est requis",
     "finish":              "Terminer"
+  },
+  "portfolio": {
+    "select_year":     "Sélectionnez un exercice fiscal",
+    "total_invested":  "Total investi",
+    "positions":       "positions",
+    "cash":            "Cash",
+    "risk_breakdown":  "Répartition du risque",
+    "add_vehicle":     "Ajouter un véhicule",
+    "add_position":    "Ajouter une position",
+    "vehicle_name":    "Nom du véhicule",
+    "expected_yield":  "Rendement attendu",
+    "vehicle_col":     "Véhicule",
+    "name":            "Nom",
+    "type":            "Type",
+    "sector":          "Secteur",
+    "risk":            "Risque",
+    "amount":          "Montant",
+    "empty":           "Aucun investissement — ajoutez un véhicule pour commencer"
   }
 }
