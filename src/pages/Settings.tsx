@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getDb } from '../db/client';
 import CategoryFormModal from '../components/ui/CategoryFormModal';
 import CategoryRow from '../components/ui/CategoryRow';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -78,21 +79,31 @@ function CategoriesSection() {
     label: string; type: CategoryType;
     color: string | null; icon: string | null; slug: string;
   }) {
-    if (editTarget) {
-      await updateMutation.mutateAsync({
-        id: editTarget.id,
-        input: { label: data.label, color: data.color ?? undefined, icon: data.icon ?? undefined },
-      });
-    } else {
-      await createMutation.mutateAsync({
-        slug:  data.slug,
-        label: data.label,
-        type:  data.type,
-        color: data.color ?? undefined,
-        icon:  data.icon  ?? undefined,
-      });
+    try {
+      if (editTarget) {
+        await updateMutation.mutateAsync({
+          id: editTarget.id,
+          input: { label: data.label, color: data.color ?? undefined, icon: data.icon ?? undefined },
+        });
+      } else {
+        await createMutation.mutateAsync({
+          slug:  data.slug,
+          label: data.label,
+          type:  data.type,
+          color: data.color ?? undefined,
+          icon:  data.icon  ?? undefined,
+        });
+      }
+      setFormOpen(false);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg === 'DUPLICATE_SLUG') {
+        // handled in modal via error state — re-open won't help, show toast-like feedback
+        alert(t('categories.error_duplicate_slug'));
+      } else {
+        alert(t('common.error'));
+      }
     }
-    setFormOpen(false);
   }
 
   async function handleArchiveConfirm() {
@@ -182,18 +193,25 @@ function CategoriesSection() {
 function LanguageSection() {
   const { t, i18n } = useTranslation();
   const current = i18n.language;
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState('');
 
   async function switchLang(lang: string) {
-    await i18n.changeLanguage(lang);
-    // Persist to DB
+    setSaving(true);
+    setError('');
     try {
-      const { getDb } = await import('../db/client');
       const db = await getDb();
       await db.execute(
         "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('default_language', ?)",
         [lang]
       );
-    } catch (_) {}
+      await i18n.changeLanguage(lang);
+    } catch (e) {
+      setError(t('common.error'));
+      if (import.meta.env.DEV) console.error('Language switch error:', e);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -206,16 +224,18 @@ function LanguageSection() {
           <button
             key={lang}
             onClick={() => switchLang(lang)}
+            disabled={saving}
             className={`px-5 py-3 rounded-xl border text-sm font-medium transition-colors ${
               current === lang
                 ? 'border-florin-400 bg-florin-500/10 text-florin-400'
                 : 'border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500'
-            }`}
+            } disabled:opacity-50`}
           >
             {lang === 'fr' ? '🇫🇷' : '🇬🇧'} {t(`settings.language.${lang}`)}
           </button>
         ))}
       </div>
+      {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
     </div>
   );
 }

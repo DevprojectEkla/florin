@@ -47,6 +47,16 @@ export interface CreateCategoryInput {
 
 export async function createCategory(input: CreateCategoryInput): Promise<number> {
   const db = await getDb();
+
+  // Guard: reject duplicate slugs with a friendly error before hitting the DB constraint
+  const existing = await db.select<{ id: number }[]>(
+    'SELECT id FROM categories WHERE slug = ?',
+    [input.slug]
+  );
+  if (existing.length > 0) {
+    throw new Error('DUPLICATE_SLUG');
+  }
+
   // Place new category after existing ones of same type
   const rows = await db.select<{ max_order: number | null }[]>(
     `SELECT MAX(sort_order) as max_order FROM categories WHERE type = ?`,
@@ -73,7 +83,6 @@ export interface UpdateCategoryInput {
   label?: string;
   color?: string;
   icon?: string;
-  is_active?: boolean;
   sort_order?: number;
 }
 
@@ -88,7 +97,6 @@ export async function updateCategory(
   if (input.label     !== undefined) { fields.push('label = ?');      values.push(input.label); }
   if (input.color     !== undefined) { fields.push('color = ?');      values.push(input.color); }
   if (input.icon      !== undefined) { fields.push('icon = ?');       values.push(input.icon); }
-  if (input.is_active !== undefined) { fields.push('is_active = ?');  values.push(input.is_active ? 1 : 0); }
   if (input.sort_order !== undefined){ fields.push('sort_order = ?'); values.push(input.sort_order); }
 
   if (fields.length === 0) return;
