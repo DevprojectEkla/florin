@@ -6,6 +6,7 @@
   "nav": {
     "dashboard":    "Dashboard",
     "transactions": "Transactions",
+    "import":       "Import",
     "budget":       "Budget",
     "investments":  "Investments",
     "settings":     "Settings"
@@ -69,14 +70,27 @@
     "pending_review": "Needs review"
   },
   "import": {
-    "title":     "Import bank statement",
-    "drop_hint": "Drop a Crédit Agricole .xlsx file here",
-    "or":        "or",
-    "browse":    "Browse",
-    "importing": "Importing…",
-    "success":   "{{count}} transactions imported",
-    "skipped":   "{{count}} duplicates skipped",
-    "conflicts": "{{count}} conflicts to resolve"
+    "title":           "Import bank statement",
+    "subtitle":        "Select an .xlsx file exported from your Crédit Agricole account",
+    "drop_hint":       "Click to select an .xlsx file",
+    "or":              "or",
+    "browse":          "Browse",
+    "parsing":         "Reading file…",
+    "importing":       "Importing…",
+    "done_title":      "Import complete",
+    "imported":        "imported",
+    "skipped_label":   "duplicates",
+    "total_in_file":   "in file",
+    "account":         "Account",
+    "period":          "Period",
+    "balance":         "Balance",
+    "import_another":  "Import another file",
+    "retry":           "Retry",
+    "error_no_account":"No account configured",
+    "error_invalid_format": "Invalid file format — this is not a Crédit Agricole statement",
+    "success":         "{{count}} transactions imported",
+    "skipped":         "{{count}} duplicates skipped",
+    "conflicts":       "{{count}} conflicts to resolve"
   },
   "settings": {
     "page_title": "Settings",
