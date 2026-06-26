@@ -161,6 +161,18 @@
     "5": "Mai", "6": "Juin", "7": "Juillet", "8": "Août",
     "9": "Septembre", "10": "Octobre", "11": "Novembre", "12": "Décembre"
   },
+  "budget": {
+    "no_fiscal_year":  "Sélectionnez un exercice fiscal pour gérer votre budget",
+    "tab_comparison":  "Suivi",
+    "tab_setup":       "Définir",
+    "total_budgeted":  "Budget",
+    "total_spent":     "Dépensé",
+    "remaining":       "Écart",
+    "no_budget_set":   "Aucun budget défini — allez dans l'onglet \"Définir\" pour commencer",
+    "setup_title":     "Budget mensuel par catégorie",
+    "total":           "Total",
+    "saved":           "Enregistré"
+  },
   "fiscal_year": {
     "all_years": "Toutes les années"
   },
