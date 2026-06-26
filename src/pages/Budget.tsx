@@ -197,8 +197,8 @@ function SetupView({ fyId }: { fyId: number }) {
   const [initialized, setInitialized] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Sync amounts when data first loads (not on every render)
-  if (!initialized && existingLines.length > 0) {
+  // Initialize form once categories and existing data are loaded
+  if (!initialized && expenseCategories.length > 0) {
     const map: Record<number, string> = {};
     for (const cat of expenseCategories) {
       const line = existingLines.find((l) => l.category_id === cat.id);
@@ -229,9 +229,15 @@ function SetupView({ fyId }: { fyId: number }) {
       .map(([catId, amt]) => ({ categoryId: parseInt(catId), amount: parseFloat(amt) || 0 }))
       .filter((l) => l.amount > 0);
 
-    await setBatchMut.mutateAsync({ fiscalYearId: fyId, lines });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (import.meta.env.DEV) console.log('[budget] Saving', lines.length, 'lines for FY', fyId);
+
+    try {
+      await setBatchMut.mutateAsync({ fiscalYearId: fyId, lines });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      if (import.meta.env.DEV) console.error('[budget] Save error:', e);
+    }
   }
 
   return (
