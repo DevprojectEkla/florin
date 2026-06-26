@@ -73,3 +73,49 @@ describe('dedupKey', () => {
     expect(a).not.toBe(b);
   });
 });
+
+import { splitLabel } from '../lib/utils';
+
+describe('splitLabel', () => {
+  it('splits PAIEMENT PAR CARTE with card number', () => {
+    const result = splitLabel('PAIEMENT PAR CARTE      X0475 CARREFOUR MARKET 92 CLIC 29/08');
+    expect(result.type).toBe('Carte');
+    expect(result.detail).toBe('CARREFOUR MARKET 92 CLIC 29/08');
+  });
+
+  it('splits VIREMENT EMIS', () => {
+    const result = splitLabel('VIREMENT EMIS           VIR INST vers SARL AGENCE DU PARC IMM Loyer');
+    expect(result.type).toBe('Virement émis');
+    expect(result.detail).toBe('VIR INST vers SARL AGENCE DU PARC IMM Loyer');
+  });
+
+  it('splits VIREMENT EN VOTRE FAVEUR', () => {
+    const result = splitLabel('VIREMENT EN VOTRE FAVEURCPAM HAUTS DE SEINE SEPA 2524500');
+    expect(result.type).toBe('Virement reçu');
+    expect(result.detail).toBe('CPAM HAUTS DE SEINE SEPA 2524500');
+  });
+
+  it('splits PRELEVEMENT', () => {
+    const result = splitLabel('PRELEVEMENT             Frais carte étranger hors UE');
+    expect(result.type).toBe('Prélèvement');
+    expect(result.detail).toBe('Frais carte étranger hors UE');
+  });
+
+  it('splits RETRAIT AU DISTRIBUTEUR', () => {
+    const result = splitLabel('RETRAIT AU DISTRIBUTEUR X0475 CLICHY         31/12 13H45');
+    expect(result.type).toBe('Retrait DAB');
+    expect(result.detail).toBe('CLICHY 31/12 13H45');
+  });
+
+  it('handles unknown format gracefully', () => {
+    const result = splitLabel('Something random');
+    expect(result.type).toBe('');
+    expect(result.detail).toBe('Something random');
+  });
+
+  it('handles multiline labels', () => {
+    const result = splitLabel('PRELEVEMENT             \nFrais carte étranger hors UE');
+    expect(result.type).toBe('Prélèvement');
+    expect(result.detail).toContain('Frais carte');
+  });
+});

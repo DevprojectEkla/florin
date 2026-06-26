@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
+import { splitLabel } from '../lib/utils';
 import type { TransactionWithCategory } from '../db/transactions';
 import type { Category } from '../types';
 
@@ -91,6 +92,7 @@ export default function Transactions() {
             <thead>
               <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="px-3 py-2.5 text-left w-24">{t('transaction.date')}</th>
+                <th className="px-3 py-2.5 text-left w-28">{t('transaction.type')}</th>
                 <th className="px-3 py-2.5 text-left">{t('transaction.label')}</th>
                 <th className="px-3 py-2.5 text-right w-24">{t('transaction.debit')}</th>
                 <th className="px-3 py-2.5 text-right w-24">{t('transaction.credit')}</th>
@@ -126,17 +128,20 @@ function TransactionRow({
   onCategoryChange: (categoryId: number | null) => void;
 }) {
   const { t } = useTranslation();
-
-  // Shorten label for display (first line only)
-  const displayLabel = tx.label_clean ?? tx.label.split('\n')[0].trim();
+  const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
 
   return (
     <tr className="hover:bg-slate-700/30 transition-colors">
       <td className="px-3 py-2 text-slate-400 text-xs font-mono whitespace-nowrap">
         {tx.date}
       </td>
+      <td className="px-3 py-2">
+        <span className="text-xs text-slate-500 bg-slate-700/50 px-1.5 py-0.5 rounded whitespace-nowrap">
+          {type || '—'}
+        </span>
+      </td>
       <td className="px-3 py-2 text-slate-200 truncate max-w-xs" title={tx.label}>
-        {displayLabel}
+        {detail}
       </td>
       <td className="px-3 py-2 text-right">
         {tx.debit ? (
