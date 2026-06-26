@@ -18,6 +18,17 @@ export default function App() {
     async function init() {
       try {
         const db = await getDb();
+        // Restore persisted language
+        const langRows = await db.select<{ value: string }[]>(
+          "SELECT value FROM app_settings WHERE key = 'default_language'"
+        );
+        if (langRows.length > 0 && langRows[0].value) {
+          const { default: i18n } = await import('./lib/i18n');
+          if (i18n.language !== langRows[0].value) {
+            await i18n.changeLanguage(langRows[0].value);
+          }
+        }
+        // Check if password is set
         const rows = await db.select<{ value: string }[]>(
           "SELECT value FROM app_settings WHERE key = 'password_hash'"
         );
@@ -27,7 +38,7 @@ export default function App() {
           setState('locked');
         }
       } catch (e) {
-        console.error('DB init error', e);
+        if (import.meta.env.DEV) console.error('DB init error', e);
         setState('setup');
       }
     }

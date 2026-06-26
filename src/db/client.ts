@@ -7,6 +7,10 @@ let _db: Database | null = null;
 export async function getDb(): Promise<Database> {
   if (_db) return _db;
   _db = await Database.load('sqlite:florin.db');
+  // These PRAGMAs must be set per-connection — SQLite resets them on reconnect.
+  // WAL improves concurrent read performance; foreign_keys enforces referential integrity.
+  await _db.execute('PRAGMA journal_mode=WAL');
+  await _db.execute('PRAGMA foreign_keys=ON');
   await runMigrations(_db);
   return _db;
 }
