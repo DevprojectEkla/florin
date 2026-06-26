@@ -69,6 +69,21 @@
     "unclassified":   "Non classé",
     "pending_review": "À classer"
   },
+  "transactions": {
+    "search": "Rechercher…",
+    "unclassified_only": "Non classées"
+  },
+  "dashboard": {
+    "no_data":            "Aucune donnée — importez un relevé bancaire pour commencer.",
+    "total_transactions": "Transactions",
+    "total_income":       "Revenus",
+    "total_expenses":     "Dépenses",
+    "net_result":         "Résultat net",
+    "this_month":         "Ce mois-ci",
+    "monthly_overview":   "Vue mensuelle",
+    "top_expenses":       "Dépenses par catégorie",
+    "unclassified":       "à classer"
+  },
   "import": {
     "title":           "Importer un relevé bancaire",
     "subtitle":        "Sélectionnez un fichier .xlsx exporté depuis votre espace Crédit Agricole",
