@@ -59,6 +59,25 @@
     "hide_archived":  "Masquer les archivées",
     "empty":          "Aucune catégorie dans ce groupe"
   },
+  "rules": {
+    "page_title":    "Règles de classification",
+    "page_subtitle": "Les règles s'appliquent automatiquement lors de l'import",
+    "add":           "Nouvelle règle",
+    "add_title":     "Nouvelle règle",
+    "edit_title":    "Modifier la règle",
+    "pattern":       "Motif",
+    "type":          "Type de recherche",
+    "priority":      "Priorité",
+    "hits":          "Utilisée",
+    "reclassify":    "Reclassifier",
+    "delete_title":  "Supprimer cette règle ?",
+    "delete_msg":    "La règle \"{{pattern}}\" sera supprimée. Les transactions déjà classées ne seront pas affectées.",
+    "pattern_types": {
+      "contains":    "Contient",
+      "starts_with": "Commence par",
+      "regex":       "Expression régulière"
+    }
+  },
   "transaction": {
     "date":           "Date",
     "type":           "Type",
@@ -112,6 +131,7 @@
     "page_title":  "Paramètres",
     "sections": {
       "categories": "Catégories",
+      "rules":      "Règles auto",
       "language":   "Langue",
       "account":    "Compte",
       "security":   "Sécurité"

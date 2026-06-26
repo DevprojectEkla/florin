@@ -4,6 +4,7 @@ import { getDb } from '../db/client';
 import CategoryFormModal from '../components/ui/CategoryFormModal';
 import CategoryRow from '../components/ui/CategoryRow';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import RuleEditor from '../components/ui/RuleEditor';
 import {
   useAllCategories,
   useCreateCategory,
@@ -12,7 +13,7 @@ import {
 } from '../hooks/useCategories';
 import type { Category, CategoryType } from '../types';
 
-const SECTION_KEYS = ['categories', 'language'] as const;
+const SECTION_KEYS = ['categories', 'rules', 'language'] as const;
 type Section = typeof SECTION_KEYS[number];
 
 const TYPE_ORDER: CategoryType[] = ['income', 'fixed', 'variable', 'savings', 'transfer'];
@@ -43,6 +44,7 @@ export default function Settings() {
       {/* Section content */}
       <div className="flex-1 overflow-y-auto p-6">
         {section === 'categories' && <CategoriesSection />}
+        {section === 'rules'      && <RuleEditor />}
         {section === 'language'   && <LanguageSection />}
       </div>
     </div>

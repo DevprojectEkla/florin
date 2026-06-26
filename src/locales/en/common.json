@@ -59,6 +59,25 @@
     "hide_archived":  "Hide archived",
     "empty":          "No categories in this group"
   },
+  "rules": {
+    "page_title":    "Classification rules",
+    "page_subtitle": "Rules are applied automatically during import",
+    "add":           "New rule",
+    "add_title":     "New rule",
+    "edit_title":    "Edit rule",
+    "pattern":       "Pattern",
+    "type":          "Match type",
+    "priority":      "Priority",
+    "hits":          "Hits",
+    "reclassify":    "Reclassify",
+    "delete_title":  "Delete this rule?",
+    "delete_msg":    "The rule \"{{pattern}}\" will be deleted. Already classified transactions are not affected.",
+    "pattern_types": {
+      "contains":    "Contains",
+      "starts_with": "Starts with",
+      "regex":       "Regular expression"
+    }
+  },
   "transaction": {
     "date":           "Date",
     "type":           "Type",
@@ -112,6 +131,7 @@
     "page_title": "Settings",
     "sections": {
       "categories": "Categories",
+      "rules":      "Auto rules",
       "language":   "Language",
       "account":    "Account",
       "security":   "Security"
