@@ -20,6 +20,9 @@
     "confirm_label":  "Confirm password",
     "create":         "Create password",
     "error_wrong":    "Incorrect password",
+    "error_wrong_attempts": "Incorrect password — {{remaining}} attempt(s) remaining",
+    "error_locked_out": "Too many attempts. Try again in {{seconds}}s.",
+    "lockout_countdown": "Locked — retry in {{seconds}}s",
     "error_mismatch": "Passwords do not match",
     "error_too_short":"Minimum 8 characters"
   },
