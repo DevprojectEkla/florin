@@ -33,7 +33,8 @@
       "fixed":    "Fixed expenses",
       "variable": "Variable expenses",
       "savings":  "Savings",
-      "transfer": "Internal transfers"
+      "transfer": "Internal transfers",
+      "capital":  "Capital Investments"
     }
   },
   "categories": {
@@ -112,7 +113,14 @@
     "year_total":         "Year total",
     "bank_balance":       "Bank balance",
     "opening_balance":    "Opening balance",
-    "since":              "since"
+    "since":              "since",
+    "months_of_data":     "months of data",
+    "total_balance":      "Total balance",
+    "avg_per_month":      "Avg/month",
+    "investments_summary_month": "Month Savings",
+    "investments_summary_year":  "Year Savings",
+    "capital_investments_month": "Month Capital Investments",
+    "capital_investments_year":  "Year Capital Investments"
   },
   "import": {
     "title":           "Import bank statement",

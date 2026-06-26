@@ -33,7 +33,8 @@
       "fixed":    "Charges fixes",
       "variable": "Dépenses variables",
       "savings":  "Épargne",
-      "transfer": "Mouvements internes"
+      "transfer": "Mouvements internes",
+      "capital":  "Investissements Capital"
     }
   },
   "categories": {
@@ -112,7 +113,14 @@
     "year_total":         "Total année",
     "bank_balance":       "Solde à la banque",
     "opening_balance":    "Solde d'ouverture",
-    "since":              "depuis"
+    "since":              "depuis",
+    "months_of_data":     "mois de données",
+    "total_balance":      "Solde total",
+    "avg_per_month":      "Moyenne/mois",
+    "investments_summary_month": "Épargne du mois",
+    "investments_summary_year":  "Épargne de l'année",
+    "capital_investments_month": "Investissements Capital du mois",
+    "capital_investments_year":  "Investissements Capital de l'année"
   },
   "import": {
     "title":           "Importer un relevé bancaire",
