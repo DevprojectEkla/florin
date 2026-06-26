@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
-import { getDb } from '../db/client';
+import {
+  getPasswordHash,
+  setPasswordHash,
+  isLockedOut,
+  recordFailedAttempt,
+  resetFailedAttempts,
+} from '../db/auth';
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_SECONDS = 60;
 
 interface Props {
   mode: 'setup' | 'locked';
@@ -11,9 +20,41 @@ interface Props {
 export default function LockScreen({ mode, onUnlocked }: Props) {
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm]   = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [locked, setLocked]     = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  // Check lockout state on mount and tick countdown
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval>;
+
+    async function checkLockout() {
+      const lockState = await isLockedOut();
+      if (lockState.locked) {
+        setLocked(true);
+        setCountdown(lockState.secondsRemaining);
+        timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              setLocked(false);
+              setError('');
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+    }
+
+    if (mode === 'locked') {
+      checkLockout();
+    }
+
+    return () => { if (timer) clearInterval(timer); };
+  }, [mode]);
 
   async function handleSetup() {
     if (password.length < 8) { setError(t('auth.error_too_short')); return; }
@@ -21,11 +62,7 @@ export default function LockScreen({ mode, onUnlocked }: Props) {
     setLoading(true);
     try {
       const hash = await invoke<string>('hash_password', { password });
-      const db = await getDb();
-      await db.execute(
-        "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('password_hash', ?)",
-        [hash]
-      );
+      await setPasswordHash(hash);
       onUnlocked();
     } catch (e) {
       if (import.meta.env.DEV) console.error('Setup error:', e);
@@ -36,19 +73,34 @@ export default function LockScreen({ mode, onUnlocked }: Props) {
   }
 
   async function handleUnlock() {
-    if (!password) return;
+    if (!password || locked) return;
     setLoading(true);
     try {
-      const db = await getDb();
-      const rows = await db.select<{ value: string }[]>(
-        "SELECT value FROM app_settings WHERE key = 'password_hash'"
-      );
-      if (rows.length === 0) { setError(t('auth.error_wrong')); setLoading(false); return; }
-      const ok = await invoke<boolean>('verify_password', { password, hash: rows[0].value });
+      // Check lockout
+      const lockState = await isLockedOut();
+      if (lockState.locked) {
+        setLocked(true);
+        setCountdown(lockState.secondsRemaining);
+        setLoading(false);
+        return;
+      }
+
+      const hash = await getPasswordHash();
+      if (!hash) { setError(t('auth.error_wrong')); setLoading(false); return; }
+
+      const ok = await invoke<boolean>('verify_password', { password, hash });
       if (ok) {
+        await resetFailedAttempts();
         onUnlocked();
       } else {
-        setError(t('auth.error_wrong'));
+        const result = await recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_SECONDS);
+        if (result.locked) {
+          setLocked(true);
+          setCountdown(LOCKOUT_SECONDS);
+          setError(t('auth.error_locked_out', { seconds: LOCKOUT_SECONDS }));
+        } else {
+          setError(t('auth.error_wrong_attempts', { remaining: result.remainingAttempts }));
+        }
       }
     } catch (e) {
       if (import.meta.env.DEV) console.error('Unlock error:', e);
@@ -88,6 +140,7 @@ export default function LockScreen({ mode, onUnlocked }: Props) {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && (isSetup ? handleSetup() : handleUnlock())}
+              disabled={locked}
               autoFocus
             />
           </div>
@@ -107,10 +160,16 @@ export default function LockScreen({ mode, onUnlocked }: Props) {
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 
+          {locked && (
+            <p className="text-amber-400 text-sm">
+              {t('auth.lockout_countdown', { seconds: countdown })}
+            </p>
+          )}
+
           <button
             className="btn-primary w-full"
             onClick={isSetup ? handleSetup : handleUnlock}
-            disabled={loading}
+            disabled={loading || locked}
           >
             {loading ? t('common.loading') : isSetup ? t('auth.create') : t('auth.unlock')}
           </button>

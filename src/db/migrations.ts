@@ -129,4 +129,21 @@ export const MIGRATIONS: string[] = [
     updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
+
+  // ── Migration 002 — dedicated auth table (SEC-01, SEC-02) ──────────────
+  `
+  CREATE TABLE IF NOT EXISTS auth_config (
+    id              INTEGER PRIMARY KEY CHECK(id = 1),
+    password_hash   TEXT NOT NULL,
+    failed_attempts INTEGER NOT NULL DEFAULT 0,
+    lockout_until   TEXT
+  );
+
+  -- Migrate existing password from app_settings to auth_config
+  INSERT OR IGNORE INTO auth_config (id, password_hash)
+    SELECT 1, value FROM app_settings WHERE key = 'password_hash';
+
+  -- Clean up old location
+  DELETE FROM app_settings WHERE key = 'password_hash';
+  `,
 ];
