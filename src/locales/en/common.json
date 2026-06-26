@@ -161,6 +161,18 @@
     "5": "May", "6": "June", "7": "July", "8": "August",
     "9": "September", "10": "October", "11": "November", "12": "December"
   },
+  "budget": {
+    "no_fiscal_year":  "Select a fiscal year to manage your budget",
+    "tab_comparison":  "Tracking",
+    "tab_setup":       "Setup",
+    "total_budgeted":  "Budget",
+    "total_spent":     "Spent",
+    "remaining":       "Delta",
+    "no_budget_set":   "No budget set — go to the \"Setup\" tab to get started",
+    "setup_title":     "Monthly budget per category",
+    "total":           "Total",
+    "saved":           "Saved"
+  },
   "fiscal_year": {
     "all_years": "All years"
   },
