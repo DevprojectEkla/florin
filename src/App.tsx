@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getDb } from './db/client';
+import { getPasswordHash } from './db/auth';
 import AppLayout from './components/layout/AppLayout';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import LockScreen from './pages/LockScreen';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
@@ -28,11 +30,16 @@ export default function App() {
             await i18n.changeLanguage(langRows[0].value);
           }
         }
+
+        // Dev mode: seed default password so we skip setup screen
+        if (import.meta.env.DEV) {
+          const { devSeedAuth } = await import('./db/dev-seed');
+          await devSeedAuth();
+        }
+
         // Check if password is set
-        const rows = await db.select<{ value: string }[]>(
-          "SELECT value FROM app_settings WHERE key = 'password_hash'"
-        );
-        if (rows.length === 0) {
+        const hash = await getPasswordHash();
+        if (!hash) {
           setState('setup');
         } else {
           setState('locked');
@@ -63,17 +70,19 @@ export default function App() {
   }
 
   return (
-    <HashRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/"              element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard"     element={<Dashboard />} />
-          <Route path="/transactions"  element={<Transactions />} />
-          <Route path="/budget"        element={<Budget />} />
-          <Route path="/investments"   element={<Investments />} />
-          <Route path="/settings"      element={<Settings />} />
-        </Routes>
-      </AppLayout>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <AppLayout>
+          <Routes>
+            <Route path="/"              element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard"     element={<Dashboard />} />
+            <Route path="/transactions"  element={<Transactions />} />
+            <Route path="/budget"        element={<Budget />} />
+            <Route path="/investments"   element={<Investments />} />
+            <Route path="/settings"      element={<Settings />} />
+          </Routes>
+        </AppLayout>
+      </HashRouter>
+    </ErrorBoundary>
   );
 }
