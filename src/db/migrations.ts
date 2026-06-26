@@ -1,9 +1,6 @@
 export const MIGRATIONS: string[] = [
   // ── Migration 001 — initial schema ──────────────────────────────────────
   `
-  PRAGMA journal_mode=WAL;
-  PRAGMA foreign_keys=ON;
-
   CREATE TABLE IF NOT EXISTS app_settings (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -130,11 +127,6 @@ export const MIGRATIONS: string[] = [
     amount      REAL NOT NULL,
     fees        REAL DEFAULT 0,
     updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS schema_migrations (
-    version    INTEGER PRIMARY KEY,
-    applied_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
 ];
