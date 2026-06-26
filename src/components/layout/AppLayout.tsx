@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useFiscalYear } from '../../store/FiscalYearContext';
 
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: '◉',  key: 'nav.dashboard'    },
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const { allFiscalYears, selectedId, setSelectedId } = useFiscalYear();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -22,6 +24,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <div className="px-5 py-6 border-b border-slate-700">
           <span className="text-florin-400 text-2xl font-bold">ƒ</span>
           <span className="text-slate-100 text-xl font-semibold ml-1">lorin</span>
+        </div>
+
+        {/* Fiscal Year Selector */}
+        <div className="px-3 py-3 border-b border-slate-700">
+          <select
+            className="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-sm
+                       text-slate-200 focus:outline-none focus:ring-1 focus:ring-florin-400"
+            value={selectedId ?? 'all'}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedId(val === 'all' ? null : parseInt(val));
+            }}
+          >
+            <option value="all">{t('fiscal_year.all_years')}</option>
+            {allFiscalYears.map((fy) => (
+              <option key={fy.id} value={fy.id}>{fy.label}</option>
+            ))}
+          </select>
         </div>
 
         {/* Nav */}

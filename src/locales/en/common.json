@@ -140,6 +140,9 @@
     "5": "May", "6": "June", "7": "July", "8": "August",
     "9": "September", "10": "October", "11": "November", "12": "December"
   },
+  "fiscal_year": {
+    "all_years": "All years"
+  },
   "onboarding": {
     "title":               "Initial setup",
     "subtitle":            "Let's configure your space in a few seconds",
