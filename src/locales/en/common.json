@@ -4,63 +4,99 @@
     "tagline": "Your finances, simply."
   },
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard":    "Dashboard",
     "transactions": "Transactions",
-    "budget": "Budget",
-    "investments": "Investments",
-    "settings": "Settings"
+    "budget":       "Budget",
+    "investments":  "Investments",
+    "settings":     "Settings"
   },
   "auth": {
-    "title": "Welcome to Florin",
-    "subtitle": "Enter your password to continue",
+    "title":          "Welcome to Florin",
+    "subtitle":       "Enter your password to continue",
     "password_label": "Password",
-    "unlock": "Unlock",
-    "setup_title": "Create your password",
+    "unlock":         "Unlock",
+    "setup_title":    "Create your password",
     "setup_subtitle": "This password protects your data locally",
-    "confirm_label": "Confirm password",
-    "create": "Create password",
-    "error_wrong": "Incorrect password",
+    "confirm_label":  "Confirm password",
+    "create":         "Create password",
+    "error_wrong":    "Incorrect password",
     "error_mismatch": "Passwords do not match",
-    "error_too_short": "Minimum 8 characters"
+    "error_too_short":"Minimum 8 characters"
   },
   "category": {
     "types": {
-      "income": "Income",
-      "fixed": "Fixed expenses",
+      "income":   "Income",
+      "fixed":    "Fixed expenses",
       "variable": "Variable expenses",
-      "savings": "Savings",
+      "savings":  "Savings",
       "transfer": "Internal transfers"
     }
   },
+  "categories": {
+    "page_title":    "Categories",
+    "page_subtitle": "Manage your expense and income categories",
+    "add_button":    "New category",
+    "add_title":     "New category",
+    "edit_title":    "Edit category",
+    "label":         "Name",
+    "label_placeholder": "e.g. Organic groceries",
+    "type":          "Type",
+    "tab_color":     "Color",
+    "tab_icon":      "Icon",
+    "archived":      "archived",
+    "system":        "system",
+    "error_label_required": "Name is required",
+    "confirm_archive_title": "Archive this category?",
+    "confirm_archive_msg":   "Linked transactions will be preserved. The category will no longer appear in menus.",
+    "confirm_delete_title":  "Delete this category?",
+    "confirm_delete_msg":    "This category has no transactions. It will be permanently deleted.",
+    "show_archived":  "Show archived",
+    "hide_archived":  "Hide archived",
+    "empty":          "No categories in this group"
+  },
   "transaction": {
-    "date": "Date",
-    "label": "Description",
-    "debit": "Debit",
-    "credit": "Credit",
-    "category": "Category",
-    "notes": "Notes",
-    "unclassified": "Unclassified",
+    "date":           "Date",
+    "label":          "Description",
+    "debit":          "Debit",
+    "credit":         "Credit",
+    "category":       "Category",
+    "notes":          "Notes",
+    "unclassified":   "Unclassified",
     "pending_review": "Needs review"
   },
   "import": {
-    "title": "Import bank statement",
+    "title":     "Import bank statement",
     "drop_hint": "Drop a Crédit Agricole .xlsx file here",
-    "or": "or",
-    "browse": "Browse",
+    "or":        "or",
+    "browse":    "Browse",
     "importing": "Importing…",
-    "success": "{{count}} transactions imported",
-    "skipped": "{{count}} duplicates skipped",
+    "success":   "{{count}} transactions imported",
+    "skipped":   "{{count}} duplicates skipped",
     "conflicts": "{{count}} conflicts to resolve"
   },
+  "settings": {
+    "page_title": "Settings",
+    "sections": {
+      "categories": "Categories",
+      "language":   "Language",
+      "account":    "Account",
+      "security":   "Security"
+    },
+    "language": {
+      "label": "Interface language",
+      "fr":    "Français",
+      "en":    "English"
+    }
+  },
   "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "confirm": "Confirm",
-    "loading": "Loading…",
-    "error": "An error occurred",
-    "empty": "No items",
+    "save":     "Save",
+    "cancel":   "Cancel",
+    "delete":   "Delete",
+    "edit":     "Edit",
+    "confirm":  "Confirm",
+    "loading":  "Loading…",
+    "error":    "An error occurred",
+    "empty":    "No items",
     "currency": "€"
   }
 }
