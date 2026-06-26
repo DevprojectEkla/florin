@@ -366,7 +366,7 @@ function BankBalanceCard() {
         </div>
         <div className="text-right space-y-0.5">
           <div className="text-xs text-slate-500">
-            {t('dashboard.opening_balance')}: {balanceData.openingBalance.toFixed(2)} €
+            {t('dashboard.opening_balance')}: {balanceData.openingBalance.toFixed(2)} € ({balanceData.fiscalYearLabel})
           </div>
           <div className="text-xs text-green-400/70">
             + {balanceData.totalCredits.toFixed(0)} €
