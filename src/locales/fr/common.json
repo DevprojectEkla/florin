@@ -6,6 +6,7 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "transactions": "Transactions",
+    "import": "Importer",
     "budget": "Budget",
     "investments": "Investissements",
     "settings": "Paramètres"
@@ -69,14 +70,27 @@
     "pending_review": "À classer"
   },
   "import": {
-    "title":      "Importer un relevé bancaire",
-    "drop_hint":  "Glissez un fichier .xlsx du Crédit Agricole ici",
-    "or":         "ou",
-    "browse":     "Parcourir",
-    "importing":  "Importation en cours…",
-    "success":    "{{count}} transactions importées",
-    "skipped":    "{{count}} doublons ignorés",
-    "conflicts":  "{{count}} conflits à résoudre"
+    "title":           "Importer un relevé bancaire",
+    "subtitle":        "Sélectionnez un fichier .xlsx exporté depuis votre espace Crédit Agricole",
+    "drop_hint":       "Cliquez pour sélectionner un fichier .xlsx",
+    "or":              "ou",
+    "browse":          "Parcourir",
+    "parsing":         "Lecture du fichier…",
+    "importing":       "Importation en cours…",
+    "done_title":      "Import terminé",
+    "imported":        "importées",
+    "skipped_label":   "doublons",
+    "total_in_file":   "dans le fichier",
+    "account":         "Compte",
+    "period":          "Période",
+    "balance":         "Solde",
+    "import_another":  "Importer un autre fichier",
+    "retry":           "Réessayer",
+    "error_no_account":"Aucun compte configuré",
+    "error_invalid_format": "Format de fichier invalide — ce n'est pas un relevé Crédit Agricole",
+    "success":         "{{count}} transactions importées",
+    "skipped":         "{{count}} doublons ignorés",
+    "conflicts":       "{{count}} conflits à résoudre"
   },
   "settings": {
     "page_title":  "Paramètres",
