@@ -3,6 +3,7 @@ import type { Transaction } from '../types';
 
 export interface TransactionWithCategory extends Transaction {
   category_label: string | null;
+  category_slug: string | null;
   category_color: string | null;
   category_icon: string | null;
   category_type: string | null;
@@ -40,6 +41,7 @@ export async function getTransactions(
   return db.select<TransactionWithCategory[]>(
     `SELECT t.*,
             c.label as category_label,
+            c.slug as category_slug,
             c.color as category_color,
             c.icon as category_icon,
             c.type as category_type
