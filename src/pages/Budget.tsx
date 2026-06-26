@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import { useActiveCategories } from '../hooks/useCategories';
@@ -191,20 +191,20 @@ function SetupView({ fyId }: { fyId: number }) {
   );
 
   // Build initial form state from existing lines
-  const initialAmounts = useMemo(() => {
+  const [amounts, setAmounts] = useState<Record<number, string>>({});
+  const [initialized, setInitialized] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Sync amounts when data first loads (not on every render)
+  if (!initialized && existingLines.length > 0) {
     const map: Record<number, string> = {};
     for (const cat of expenseCategories) {
       const line = existingLines.find((l) => l.category_id === cat.id);
       map[cat.id] = line ? String(line.monthly_amount) : '';
     }
-    return map;
-  }, [expenseCategories, existingLines]);
-
-  const [amounts, setAmounts] = useState<Record<number, string>>(initialAmounts);
-  const [saved, setSaved] = useState(false);
-
-  // Sync when data loads
-  useMemo(() => { setAmounts(initialAmounts); }, [initialAmounts]);
+    setAmounts(map);
+    setInitialized(true);
+  }
 
   const total = Object.values(amounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
 
