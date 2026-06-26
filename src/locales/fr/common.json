@@ -98,9 +98,36 @@
     "delete":   "Supprimer",
     "edit":     "Modifier",
     "confirm":  "Confirmer",
+    "next":     "Suivant",
+    "back":     "Retour",
+    "optional": "optionnel",
     "loading":  "Chargement…",
     "error":    "Une erreur est survenue",
     "empty":    "Aucun élément",
     "currency": "€"
+  },
+  "months": {
+    "1": "Janvier", "2": "Février", "3": "Mars", "4": "Avril",
+    "5": "Mai", "6": "Juin", "7": "Juillet", "8": "Août",
+    "9": "Septembre", "10": "Octobre", "11": "Novembre", "12": "Décembre"
+  },
+  "onboarding": {
+    "title":               "Configuration initiale",
+    "subtitle":            "Configurons votre espace en quelques secondes",
+    "account_title":       "Votre compte bancaire",
+    "account_subtitle":    "Le compte principal depuis lequel vous importerez vos relevés",
+    "account_name":        "Nom du compte",
+    "bank_name":           "Banque",
+    "account_number":      "Numéro de compte",
+    "error_account_name":  "Le nom du compte est requis",
+    "fy_title":            "Votre exercice fiscal",
+    "fy_subtitle":         "La période sur laquelle vous suivez votre budget",
+    "fy_label":            "Libellé de l'exercice",
+    "fy_start_month":      "Mois de début",
+    "fy_start_year":       "Année de début",
+    "opening_balance":     "Solde d'ouverture",
+    "opening_balance_hint":"Le solde de votre compte au premier jour de l'exercice",
+    "error_fy_label":      "Le libellé est requis",
+    "finish":              "Terminer"
   }
 }
