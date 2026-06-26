@@ -146,4 +146,32 @@ export const MIGRATIONS: string[] = [
   -- Clean up old location
   DELETE FROM app_settings WHERE key = 'password_hash';
   `,
+
+  // ── Migration 003 — add capital category type ───────────────────────────
+  `
+  -- Drop old constraint and recreate with capital type
+  CREATE TABLE categories_new (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug       TEXT NOT NULL UNIQUE,
+    label      TEXT NOT NULL,
+    type       TEXT NOT NULL CHECK(type IN ('income','fixed','variable','savings','transfer','capital')),
+    color      TEXT,
+    icon       TEXT,
+    is_system  INTEGER NOT NULL DEFAULT 0,
+    is_active  INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0
+  );
+
+  INSERT INTO categories_new SELECT * FROM categories;
+  DROP TABLE categories;
+  ALTER TABLE categories_new RENAME TO categories;
+
+  -- Add capital investment categories
+  INSERT INTO categories (slug, label, type, color, icon, is_system, sort_order) VALUES
+    ('capital.furniture', 'Mobilier', 'capital', '#8b5cf6', '🛋️', 0, 600),
+    ('capital.tech', 'Informatique & Électronique', 'capital', '#3b82f6', '💻', 0, 601),
+    ('capital.clothing', 'Vêtements', 'capital', '#ec4899', '👔', 0, 602),
+    ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 603),
+    ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 604);
+  `,
 ];

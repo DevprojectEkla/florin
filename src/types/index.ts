@@ -1,6 +1,6 @@
 // ─── Domain types ────────────────────────────────────────────────────────────
 
-export type CategoryType = 'income' | 'fixed' | 'variable' | 'savings' | 'transfer';
+export type CategoryType = 'income' | 'fixed' | 'variable' | 'savings' | 'transfer' | 'capital';
 
 export interface Category {
   id: number;
