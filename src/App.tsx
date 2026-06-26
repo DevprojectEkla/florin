@@ -5,6 +5,7 @@ import { getPasswordHash } from './db/auth';
 import { isOnboardingComplete } from './db/accounts';
 import AppLayout from './components/layout/AppLayout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { FiscalYearProvider } from './store/FiscalYearContext';
 import LockScreen from './pages/LockScreen';
 import OnboardingWizard from './pages/OnboardingWizard';
 import Dashboard from './pages/Dashboard';
@@ -85,17 +86,19 @@ export default function App() {
   return (
     <ErrorBoundary>
       <HashRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/"              element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard"     element={<Dashboard />} />
-            <Route path="/transactions"  element={<Transactions />} />
-            <Route path="/import"        element={<Import />} />
-            <Route path="/budget"        element={<Budget />} />
-            <Route path="/investments"   element={<Investments />} />
-            <Route path="/settings"      element={<Settings />} />
-          </Routes>
-        </AppLayout>
+        <FiscalYearProvider>
+          <AppLayout>
+            <Routes>
+              <Route path="/"              element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard"     element={<Dashboard />} />
+              <Route path="/transactions"  element={<Transactions />} />
+              <Route path="/import"        element={<Import />} />
+              <Route path="/budget"        element={<Budget />} />
+              <Route path="/investments"   element={<Investments />} />
+              <Route path="/settings"      element={<Settings />} />
+            </Routes>
+          </AppLayout>
+        </FiscalYearProvider>
       </HashRouter>
     </ErrorBoundary>
   );

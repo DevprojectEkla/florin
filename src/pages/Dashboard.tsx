@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useFirstAccount, useActiveFiscalYear } from '../hooks/useAccounts';
+import { useFiscalYear } from '../store/FiscalYearContext';
 import {
   useTransactionCount,
   useUnclassifiedCount,
@@ -12,10 +12,7 @@ import {
 export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: account } = useFirstAccount();
-  const { data: fiscalYear } = useActiveFiscalYear(account?.id);
-
-  const fyId = fiscalYear?.id;
+  const { selected: fiscalYear, selectedId: fyId } = useFiscalYear();
   const { data: txCount = 0 }         = useTransactionCount(fyId);
   const { data: unclassified = 0 }    = useUnclassifiedCount(fyId);
   const { data: monthly = [] }        = useMonthlyAggregates(fyId);
@@ -59,7 +56,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">{t('nav.dashboard')}</h1>
-          <p className="text-slate-400 text-sm">{fiscalYear.label} — {account?.name}</p>
+          <p className="text-slate-400 text-sm">{fiscalYear?.label ?? t('fiscal_year.all_years')}</p>
         </div>
         {unclassified > 0 && (
           <button
