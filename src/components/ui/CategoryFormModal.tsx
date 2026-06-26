@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from './Modal';
 import ColorPicker from './ColorPicker';
 import IconPicker from './IconPicker';
+import { slugify } from '../../lib/utils';
 import type { Category, CategoryType } from '../../types';
 
 interface Props {
@@ -20,15 +21,6 @@ interface Props {
 }
 
 const TYPES: CategoryType[] = ['income', 'fixed', 'variable', 'savings', 'transfer'];
-
-function slugify(label: string): string {
-  return label
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-}
 
 export default function CategoryFormModal({ open, onClose, onSubmit, initial, loading }: Props) {
   const { t } = useTranslation();

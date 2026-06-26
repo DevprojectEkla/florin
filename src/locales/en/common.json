@@ -46,6 +46,7 @@
     "archived":      "archived",
     "system":        "system",
     "error_label_required": "Name is required",
+    "error_duplicate_slug": "A category with this name already exists",
     "confirm_archive_title": "Archive this category?",
     "confirm_archive_msg":   "Linked transactions will be preserved. The category will no longer appear in menus.",
     "confirm_delete_title":  "Delete this category?",

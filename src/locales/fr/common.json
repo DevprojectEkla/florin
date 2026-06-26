@@ -46,6 +46,7 @@
     "archived":      "archivée",
     "system":        "système",
     "error_label_required": "Le nom est requis",
+    "error_duplicate_slug": "Une catégorie avec ce nom existe déjà",
     "confirm_archive_title": "Archiver cette catégorie ?",
     "confirm_archive_msg":   "Les transactions liées seront conservées. La catégorie n'apparaîtra plus dans les menus.",
     "confirm_delete_title":  "Supprimer cette catégorie ?",

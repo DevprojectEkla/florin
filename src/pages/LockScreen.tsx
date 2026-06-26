@@ -28,7 +28,8 @@ export default function LockScreen({ mode, onUnlocked }: Props) {
       );
       onUnlocked();
     } catch (e) {
-      setError(t('common.error'));
+      if (import.meta.env.DEV) console.error('Setup error:', e);
+      setError(`${t('common.error')}: ${String(e)}`);
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,8 @@ export default function LockScreen({ mode, onUnlocked }: Props) {
         setError(t('auth.error_wrong'));
       }
     } catch (e) {
-      setError(t('common.error'));
+      if (import.meta.env.DEV) console.error('Unlock error:', e);
+      setError(`${t('common.error')}: ${String(e)}`);
     } finally {
       setLoading(false);
     }
