@@ -150,6 +150,14 @@ export default function Dashboard() {
       {/* Bank balance — only visible for specific fiscal year */}
       {!isAllYearsMode && <BankBalanceCard />}
 
+      {/* Investments/Savings summary */}
+      <InvestmentsSummaryCard 
+        fyId={fyId} 
+        year={viewYear} 
+        month={viewMonth}
+        showYearTotal={showYearOverview || isAllYearsMode}
+      />
+
       {/* KPIs: show month data OR all-years totals */}
       {!isAllYearsMode ? (
         // Month KPIs (specific fiscal year)
@@ -450,6 +458,121 @@ function BankBalanceCard() {
             {balanceData.transactionCount} tx {balanceData.startDate ? `(${t('dashboard.since')} ${balanceData.startDate})` : ''}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Investments Summary Card ────────────────────────────────────────────────
+
+function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: { 
+  fyId: number | null; 
+  year: number; 
+  month: number;
+  showYearTotal: boolean;
+}) {
+  const { t } = useTranslation();
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const { data: transactions = [] } = useTransactions(fyId, showYearTotal ? {} : { year, month });
+
+  if (!transactions || transactions.length === 0) return null;
+
+  // Calculate investments by savings category
+  const investments = transactions
+    .filter(tx => tx.category_type === 'savings' && tx.debit && tx.debit > 0)
+    .reduce((acc, tx) => {
+      const key = tx.category_slug || 'unknown';
+      if (!acc[key]) {
+        acc[key] = {
+          label: tx.category_label || 'Unknown',
+          icon: tx.category_icon || '💰',
+          total: 0,
+          count: 0,
+          transactions: [],
+        };
+      }
+      acc[key].total += tx.debit || 0;
+      acc[key].count += 1;
+      acc[key].transactions.push(tx);
+      return acc;
+    }, {} as Record<string, { label: string; icon: string; total: number; count: number; transactions: TransactionWithCategory[] }>);
+
+  const investmentsList = Object.entries(investments)
+    .sort((a, b) => b[1].total - a[1].total);
+
+  const totalInvestments = investmentsList.reduce((sum, [, inv]) => sum + inv.total, 0);
+
+  if (investmentsList.length === 0) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-emerald-900/20 to-emerald-800/10 rounded-xl border border-emerald-700/30 px-5 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <span className="text-xs text-emerald-400/70 uppercase tracking-wider">
+            {showYearTotal 
+              ? t('dashboard.investments_summary_year') 
+              : t('dashboard.investments_summary_month')}
+          </span>
+          <div className="text-2xl font-bold mt-0.5 text-emerald-400">
+            {totalInvestments.toFixed(2)} €
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2 mt-3">
+        {investmentsList.map(([slug, inv]) => {
+          const isExpanded = expandedSlug === slug;
+          return (
+            <div key={slug}>
+              <button
+                onClick={() => setExpandedSlug(isExpanded ? null : slug)}
+                className={`w-full bg-slate-800/40 rounded-lg px-3 py-2 border border-slate-700/50 hover:bg-slate-800/60 transition-colors text-left ${
+                  isExpanded ? 'border-emerald-600/50' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <span className="text-lg">{inv.icon}</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-slate-300 font-medium">{inv.label}</div>
+                      <div className="text-xs text-slate-500">
+                        {inv.count} {inv.count === 1 ? 'versement' : 'versements'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-lg font-bold text-emerald-400">
+                      {inv.total.toFixed(0)} €
+                    </div>
+                    <span className="text-xs text-slate-500 w-4">{isExpanded ? '▼' : '▶'}</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Drilldown: transaction details */}
+              {isExpanded && (
+                <div className="ml-8 mr-2 my-2 border-l-2 border-emerald-600/30 pl-3 space-y-0.5">
+                  {inv.transactions
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .map((tx) => {
+                      const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
+                      return (
+                        <div key={tx.id} className="flex items-center gap-2 py-1 text-sm">
+                          <span className="text-xs text-slate-500 font-mono w-20 flex-shrink-0">{tx.date}</span>
+                          <span className="text-xs text-emerald-600/70 bg-emerald-900/20 px-1.5 py-0.5 rounded flex-shrink-0">{type}</span>
+                          <span className="text-xs text-slate-300 flex-1 truncate" title={tx.label}>{detail}</span>
+                          <span className="text-xs font-mono text-emerald-400 w-20 text-right flex-shrink-0">
+                            {tx.debit?.toFixed(2)} €
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
