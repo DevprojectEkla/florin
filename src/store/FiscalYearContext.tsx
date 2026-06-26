@@ -23,6 +23,7 @@ export function FiscalYearProvider({ children }: { children: ReactNode }) {
   const { data: latestFy } = useActiveFiscalYear(account?.id);
   const [allFYs, setAllFYs] = useState<FiscalYear[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Load all fiscal years
   useEffect(() => {
@@ -30,12 +31,13 @@ export function FiscalYearProvider({ children }: { children: ReactNode }) {
     getFiscalYears(account.id).then(setAllFYs);
   }, [account]);
 
-  // Default to latest FY
+  // Default to latest FY only on first initialization
   useEffect(() => {
-    if (selectedId === null && latestFy) {
+    if (!hasInitialized && latestFy) {
       setSelectedId(latestFy.id);
+      setHasInitialized(true);
     }
-  }, [latestFy, selectedId]);
+  }, [latestFy, hasInitialized]);
 
   const selected = allFYs.find((fy) => fy.id === selectedId) ?? null;
 
