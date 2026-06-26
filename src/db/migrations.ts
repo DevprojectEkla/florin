@@ -185,4 +185,35 @@ export const MIGRATIONS: string[] = [
     ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 1, 603),
     ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 1, 604);
   `,
+
+  // ── Migration 005 — fix CHECK constraint to include capital ───────────────
+  `
+  -- Recreate categories table with correct CHECK constraint including 'capital'
+  CREATE TABLE categories_temp (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug       TEXT NOT NULL UNIQUE,
+    label      TEXT NOT NULL,
+    type       TEXT NOT NULL CHECK(type IN ('income','fixed','variable','savings','transfer','capital')),
+    color      TEXT,
+    icon       TEXT,
+    is_system  INTEGER NOT NULL DEFAULT 0,
+    is_active  INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0
+  );
+
+  -- Copy existing data
+  INSERT INTO categories_temp SELECT * FROM categories;
+  
+  -- Drop old table and rename
+  DROP TABLE categories;
+  ALTER TABLE categories_temp RENAME TO categories;
+
+  -- Now insert capital categories
+  INSERT OR IGNORE INTO categories (slug, label, type, color, icon, is_system, is_active, sort_order) VALUES
+    ('capital.furniture', 'Mobilier', 'capital', '#8b5cf6', '🛋️', 0, 1, 600),
+    ('capital.tech', 'Informatique & Électronique', 'capital', '#3b82f6', '💻', 0, 1, 601),
+    ('capital.clothing', 'Vêtements', 'capital', '#ec4899', '👔', 0, 1, 602),
+    ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 1, 603),
+    ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 1, 604);
+  `,
 ];
