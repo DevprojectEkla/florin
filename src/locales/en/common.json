@@ -98,9 +98,36 @@
     "delete":   "Delete",
     "edit":     "Edit",
     "confirm":  "Confirm",
+    "next":     "Next",
+    "back":     "Back",
+    "optional": "optional",
     "loading":  "Loading…",
     "error":    "An error occurred",
     "empty":    "No items",
     "currency": "€"
+  },
+  "months": {
+    "1": "January", "2": "February", "3": "March", "4": "April",
+    "5": "May", "6": "June", "7": "July", "8": "August",
+    "9": "September", "10": "October", "11": "November", "12": "December"
+  },
+  "onboarding": {
+    "title":               "Initial setup",
+    "subtitle":            "Let's configure your space in a few seconds",
+    "account_title":       "Your bank account",
+    "account_subtitle":    "The primary account from which you'll import statements",
+    "account_name":        "Account name",
+    "bank_name":           "Bank",
+    "account_number":      "Account number",
+    "error_account_name":  "Account name is required",
+    "fy_title":            "Your fiscal year",
+    "fy_subtitle":         "The period over which you track your budget",
+    "fy_label":            "Fiscal year label",
+    "fy_start_month":      "Start month",
+    "fy_start_year":       "Start year",
+    "opening_balance":     "Opening balance",
+    "opening_balance_hint":"Your account balance on the first day of the fiscal year",
+    "error_fy_label":      "Label is required",
+    "finish":              "Finish"
   }
 }

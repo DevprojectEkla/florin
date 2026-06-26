@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getDb } from './db/client';
 import { getPasswordHash } from './db/auth';
+import { isOnboardingComplete } from './db/accounts';
 import AppLayout from './components/layout/AppLayout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import LockScreen from './pages/LockScreen';
+import OnboardingWizard from './pages/OnboardingWizard';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Budget from './pages/Budget';
 import Investments from './pages/Investments';
 import Settings from './pages/Settings';
 
-type AppState = 'loading' | 'setup' | 'locked' | 'unlocked';
+type AppState = 'loading' | 'setup' | 'locked' | 'onboarding' | 'ready';
 
 export default function App() {
   const [state, setState] = useState<AppState>('loading');
@@ -52,6 +54,12 @@ export default function App() {
     init();
   }, []);
 
+  async function handleUnlocked() {
+    // After unlocking, check if onboarding is done
+    const complete = await isOnboardingComplete();
+    setState(complete ? 'ready' : 'onboarding');
+  }
+
   if (state === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-900">
@@ -64,9 +72,13 @@ export default function App() {
     return (
       <LockScreen
         mode={state}
-        onUnlocked={() => setState('unlocked')}
+        onUnlocked={handleUnlocked}
       />
     );
+  }
+
+  if (state === 'onboarding') {
+    return <OnboardingWizard onComplete={() => setState('ready')} />;
   }
 
   return (
