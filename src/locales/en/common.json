@@ -69,6 +69,21 @@
     "unclassified":   "Unclassified",
     "pending_review": "Needs review"
   },
+  "transactions": {
+    "search": "Search…",
+    "unclassified_only": "Unclassified"
+  },
+  "dashboard": {
+    "no_data":            "No data — import a bank statement to get started.",
+    "total_transactions": "Transactions",
+    "total_income":       "Income",
+    "total_expenses":     "Expenses",
+    "net_result":         "Net result",
+    "this_month":         "This month",
+    "monthly_overview":   "Monthly overview",
+    "top_expenses":       "Expenses by category",
+    "unclassified":       "to classify"
+  },
   "import": {
     "title":           "Import bank statement",
     "subtitle":        "Select an .xlsx file exported from your Crédit Agricole account",
