@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import { useActiveCategories } from '../hooks/useCategories';
-import { useBudgetLines, useBudgetComparison, useBudgetSummary, useSetBudgetBatch } from '../hooks/useBudget';
+import { useBudgetLines, useBudgetComparison, useBudgetSummary, useSetBudgetBatch, useComputeAverages } from '../hooks/useBudget';
 import type { Category } from '../types';
 
 type Tab = 'comparison' | 'setup';
@@ -181,9 +181,11 @@ function ComparisonView({ fyId, selectedYear, selectedMonth, onMonthChange }: {
 
 function SetupView({ fyId }: { fyId: number }) {
   const { t } = useTranslation();
+  const { allFiscalYears } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
   const { data: existingLines = [] } = useBudgetLines(fyId);
   const setBatchMut = useSetBudgetBatch();
+  const computeAvgMut = useComputeAverages();
 
   // Only show expense categories (fixed + variable)
   const expenseCategories = categories.filter(
@@ -206,6 +208,20 @@ function SetupView({ fyId }: { fyId: number }) {
     setInitialized(true);
   }
 
+  // Other fiscal years available for pre-fill (exclude current)
+  const otherFYs = allFiscalYears.filter((fy) => fy.id !== fyId);
+
+  async function handlePrefill(sourceFyId: number) {
+    const averages = await computeAvgMut.mutateAsync(sourceFyId);
+    const newAmounts: Record<number, string> = { ...amounts };
+    for (const avg of averages) {
+      if (avg.average > 0) {
+        newAmounts[avg.categoryId] = String(avg.average);
+      }
+    }
+    setAmounts(newAmounts);
+  }
+
   const total = Object.values(amounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
 
   async function handleSave() {
@@ -224,6 +240,21 @@ function SetupView({ fyId }: { fyId: number }) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-slate-400">{t('budget.setup_title')}</h2>
           <div className="flex items-center gap-3">
+            {otherFYs.length > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-slate-500">{t('budget.prefill_from')}:</span>
+                {otherFYs.map((fy) => (
+                  <button
+                    key={fy.id}
+                    className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-florin-400 transition-colors"
+                    onClick={() => handlePrefill(fy.id)}
+                    disabled={computeAvgMut.isPending}
+                  >
+                    📊 {fy.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {saved && <span className="text-green-400 text-xs">✓ {t('budget.saved')}</span>}
             <span className="text-sm text-slate-300 font-mono">
               {t('budget.total')}: <span className="text-florin-400 font-bold">{total.toFixed(0)} €</span> /mois

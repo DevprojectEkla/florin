@@ -5,6 +5,7 @@ import {
   getBudgetSummary,
   upsertBudgetLine,
   setBudgetBatch,
+  computeAveragesFromHistory,
 } from '../db/budget';
 
 export function useBudgetLines(fiscalYearId: number | undefined) {
@@ -48,5 +49,11 @@ export function useSetBudgetBatch() {
       fiscalYearId: number; lines: { categoryId: number; amount: number }[];
     }) => setBudgetBatch(fiscalYearId, lines),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['budget'] }); },
+  });
+}
+
+export function useComputeAverages() {
+  return useMutation({
+    mutationFn: (fiscalYearId: number) => computeAveragesFromHistory(fiscalYearId),
   });
 }
