@@ -195,5 +195,23 @@
     "opening_balance_hint":"Your account balance on the first day of the fiscal year",
     "error_fy_label":      "Label is required",
     "finish":              "Finish"
+  },
+  "portfolio": {
+    "select_year":     "Select a fiscal year",
+    "total_invested":  "Total invested",
+    "positions":       "positions",
+    "cash":            "Cash",
+    "risk_breakdown":  "Risk breakdown",
+    "add_vehicle":     "Add vehicle",
+    "add_position":    "Add position",
+    "vehicle_name":    "Vehicle name",
+    "expected_yield":  "Expected yield",
+    "vehicle_col":     "Vehicle",
+    "name":            "Name",
+    "type":            "Type",
+    "sector":          "Sector",
+    "risk":            "Risk",
+    "amount":          "Amount",
+    "empty":           "No investments — add a vehicle to get started"
   }
 }
