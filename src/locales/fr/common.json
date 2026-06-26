@@ -109,7 +109,10 @@
     "month_by_category":  "Dépenses par catégorie",
     "no_month_data":      "Aucune donnée pour ce mois",
     "year_view":          "Vue annuelle",
-    "year_total":         "Total année"
+    "year_total":         "Total année",
+    "bank_balance":       "Solde à la banque",
+    "opening_balance":    "Solde d'ouverture",
+    "since":              "depuis"
   },
   "import": {
     "title":           "Importer un relevé bancaire",

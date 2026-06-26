@@ -37,6 +37,7 @@ export function useReclassify() {
       qc.invalidateQueries({ queryKey: ['rules'] });
       qc.invalidateQueries({ queryKey: ['transactions'] });
       qc.invalidateQueries({ queryKey: ['aggregates'] });
+      qc.invalidateQueries({ queryKey: ['balance'] });
     },
   });
 }

@@ -109,7 +109,10 @@
     "month_by_category":  "Expenses by category",
     "no_month_data":      "No data for this month",
     "year_view":          "Year view",
-    "year_total":         "Year total"
+    "year_total":         "Year total",
+    "bank_balance":       "Bank balance",
+    "opening_balance":    "Opening balance",
+    "since":              "since"
   },
   "import": {
     "title":           "Import bank statement",
