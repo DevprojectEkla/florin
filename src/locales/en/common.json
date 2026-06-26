@@ -102,7 +102,14 @@
     "this_month":         "This month",
     "monthly_overview":   "Monthly overview",
     "top_expenses":       "Expenses by category",
-    "unclassified":       "to classify"
+    "unclassified":       "to classify",
+    "month_income":       "Income",
+    "month_expenses":     "Expenses",
+    "month_balance":      "Month balance",
+    "month_by_category":  "Expenses by category",
+    "no_month_data":      "No data for this month",
+    "year_view":          "Year view",
+    "year_total":         "Year total"
   },
   "import": {
     "title":           "Import bank statement",

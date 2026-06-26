@@ -102,7 +102,14 @@
     "this_month":         "Ce mois-ci",
     "monthly_overview":   "Vue mensuelle",
     "top_expenses":       "Dépenses par catégorie",
-    "unclassified":       "à classer"
+    "unclassified":       "à classer",
+    "month_income":       "Revenus",
+    "month_expenses":     "Dépenses",
+    "month_balance":      "Solde du mois",
+    "month_by_category":  "Dépenses par catégorie",
+    "no_month_data":      "Aucune donnée pour ce mois",
+    "year_view":          "Vue annuelle",
+    "year_total":         "Total année"
   },
   "import": {
     "title":           "Importer un relevé bancaire",
