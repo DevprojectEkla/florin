@@ -61,6 +61,7 @@
   },
   "transaction": {
     "date":           "Date",
+    "type":           "Type",
     "label":          "Libellé",
     "debit":          "Débit",
     "credit":         "Crédit",
