@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Florin",
+    "tagline": "Your finances, simply."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "budget": "Budget",
+    "investments": "Investments",
+    "settings": "Settings"
+  },
+  "auth": {
+    "title": "Welcome to Florin",
+    "subtitle": "Enter your password to continue",
+    "password_label": "Password",
+    "unlock": "Unlock",
+    "setup_title": "Create your password",
+    "setup_subtitle": "This password protects your data locally",
+    "confirm_label": "Confirm password",
+    "create": "Create password",
+    "error_wrong": "Incorrect password",
+    "error_mismatch": "Passwords do not match",
+    "error_too_short": "Minimum 8 characters"
+  },
+  "category": {
+    "types": {
+      "income": "Income",
+      "fixed": "Fixed expenses",
+      "variable": "Variable expenses",
+      "savings": "Savings",
+      "transfer": "Internal transfers"
+    }
+  },
+  "transaction": {
+    "date": "Date",
+    "label": "Description",
+    "debit": "Debit",
+    "credit": "Credit",
+    "category": "Category",
+    "notes": "Notes",
+    "unclassified": "Unclassified",
+    "pending_review": "Needs review"
+  },
+  "import": {
+    "title": "Import bank statement",
+    "drop_hint": "Drop a Crédit Agricole .xlsx file here",
+    "or": "or",
+    "browse": "Browse",
+    "importing": "Importing…",
+    "success": "{{count}} transactions imported",
+    "skipped": "{{count}} duplicates skipped",
+    "conflicts": "{{count}} conflicts to resolve"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "empty": "No items",
+    "currency": "€"
+  }
+}
