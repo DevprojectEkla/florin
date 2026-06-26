@@ -25,42 +25,78 @@
   },
   "category": {
     "types": {
-      "income": "Revenus",
-      "fixed": "Charges fixes",
+      "income":   "Revenus",
+      "fixed":    "Charges fixes",
       "variable": "Dépenses variables",
-      "savings": "Épargne",
+      "savings":  "Épargne",
       "transfer": "Mouvements internes"
     }
   },
+  "categories": {
+    "page_title":    "Catégories",
+    "page_subtitle": "Gérez vos catégories de dépenses et de revenus",
+    "add_button":    "Nouvelle catégorie",
+    "add_title":     "Nouvelle catégorie",
+    "edit_title":    "Modifier la catégorie",
+    "label":         "Nom",
+    "label_placeholder": "ex: Courses bio",
+    "type":          "Type",
+    "tab_color":     "Couleur",
+    "tab_icon":      "Icône",
+    "archived":      "archivée",
+    "system":        "système",
+    "error_label_required": "Le nom est requis",
+    "confirm_archive_title": "Archiver cette catégorie ?",
+    "confirm_archive_msg":   "Les transactions liées seront conservées. La catégorie n'apparaîtra plus dans les menus.",
+    "confirm_delete_title":  "Supprimer cette catégorie ?",
+    "confirm_delete_msg":    "Cette catégorie n'a aucune transaction. Elle sera supprimée définitivement.",
+    "show_archived":  "Afficher les archivées",
+    "hide_archived":  "Masquer les archivées",
+    "empty":          "Aucune catégorie dans ce groupe"
+  },
   "transaction": {
-    "date": "Date",
-    "label": "Libellé",
-    "debit": "Débit",
-    "credit": "Crédit",
-    "category": "Catégorie",
-    "notes": "Notes",
-    "unclassified": "Non classé",
+    "date":           "Date",
+    "label":          "Libellé",
+    "debit":          "Débit",
+    "credit":         "Crédit",
+    "category":       "Catégorie",
+    "notes":          "Notes",
+    "unclassified":   "Non classé",
     "pending_review": "À classer"
   },
   "import": {
-    "title": "Importer un relevé bancaire",
-    "drop_hint": "Glissez un fichier .xlsx du Crédit Agricole ici",
-    "or": "ou",
-    "browse": "Parcourir",
-    "importing": "Importation en cours…",
-    "success": "{{count}} transactions importées",
-    "skipped": "{{count}} doublons ignorés",
-    "conflicts": "{{count}} conflits à résoudre"
+    "title":      "Importer un relevé bancaire",
+    "drop_hint":  "Glissez un fichier .xlsx du Crédit Agricole ici",
+    "or":         "ou",
+    "browse":     "Parcourir",
+    "importing":  "Importation en cours…",
+    "success":    "{{count}} transactions importées",
+    "skipped":    "{{count}} doublons ignorés",
+    "conflicts":  "{{count}} conflits à résoudre"
+  },
+  "settings": {
+    "page_title":  "Paramètres",
+    "sections": {
+      "categories": "Catégories",
+      "language":   "Langue",
+      "account":    "Compte",
+      "security":   "Sécurité"
+    },
+    "language": {
+      "label": "Langue de l'interface",
+      "fr":    "Français",
+      "en":    "English"
+    }
   },
   "common": {
-    "save": "Enregistrer",
-    "cancel": "Annuler",
-    "delete": "Supprimer",
-    "edit": "Modifier",
-    "confirm": "Confirmer",
-    "loading": "Chargement…",
-    "error": "Une erreur est survenue",
-    "empty": "Aucun élément",
+    "save":     "Enregistrer",
+    "cancel":   "Annuler",
+    "delete":   "Supprimer",
+    "edit":     "Modifier",
+    "confirm":  "Confirmer",
+    "loading":  "Chargement…",
+    "error":    "Une erreur est survenue",
+    "empty":    "Aucun élément",
     "currency": "€"
   }
 }
