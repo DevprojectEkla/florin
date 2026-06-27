@@ -18,7 +18,7 @@ import type { Category } from '../types';
 export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { selected: fiscalYear, selectedId: fyId } = useFiscalYear();
+  const { selected: fiscalYear, selectedId: fyId, allFiscalYears, setSelectedId } = useFiscalYear();
 
   // Default to current month
   const now = new Date();
@@ -76,41 +76,66 @@ export default function Dashboard() {
     .sort((a, b) => a.total - b.total);
 
   function prevMonth() {
-    // Don't allow going before fiscal year start
+    // Calculate new month
+    let newMonth = viewMonth - 1;
+    let newYear = viewYear;
+    if (newMonth < 1) {
+      newMonth = 12;
+      newYear--;
+    }
+    
     if (fiscalYear) {
       const fyStartDate = new Date(fiscalYear.start_year, fiscalYear.start_month - 1);
-      
-      // Calculate new month
-      let newMonth = viewMonth - 1;
-      let newYear = viewYear;
-      if (newMonth < 1) {
-        newMonth = 12;
-        newYear--;
-      }
-      
       const newDate = new Date(newYear, newMonth - 1);
       
-      // Only allow if new date is >= fiscal year start
-      if (newDate >= fyStartDate) {
-        setViewMonth(newMonth);
-        setViewYear(newYear);
-      }
-    } else {
-      // No fiscal year selected (all years mode) - allow any navigation
-      if (viewMonth === 1) { 
-        setViewMonth(12); 
-        setViewYear(viewYear - 1); 
-      } else {
-        setViewMonth(viewMonth - 1);
+      // If we're trying to go before fiscal year start, switch to previous fiscal year
+      if (newDate < fyStartDate) {
+        // Find previous fiscal year (by start_year)
+        const sortedFYs = [...allFiscalYears].sort((a, b) => {
+          if (a.start_year !== b.start_year) return a.start_year - b.start_year;
+          return a.start_month - b.start_month;
+        });
+        const currentIndex = sortedFYs.findIndex(fy => fy.id === fiscalYear.id);
+        
+        if (currentIndex > 0) {
+          // Switch to previous fiscal year's last month (end month)
+          const prevFY = sortedFYs[currentIndex - 1];
+          setSelectedId(prevFY.id);
+          // Will be reset to prevFY start by useEffect, but we want the end month
+          // So we set it after a tick
+          setTimeout(() => {
+            let endMonth = prevFY.start_month - 1;
+            let endYear = prevFY.start_year + 1;
+            if (endMonth < 1) {
+              endMonth = 12;
+              endYear--;
+            }
+            setViewMonth(endMonth);
+            setViewYear(endYear);
+          }, 0);
+          return;
+        }
+        // No previous fiscal year, stay at boundary
+        return;
       }
     }
+    
+    // Normal navigation (no fiscal year or within bounds)
+    setViewMonth(newMonth);
+    setViewYear(newYear);
   }
   
   function nextMonth() {
-    // Don't allow going after fiscal year end
+    // Calculate new month
+    let newMonth = viewMonth + 1;
+    let newYear = viewYear;
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear++;
+    }
+    
     if (fiscalYear) {
       // Fiscal year ends 11 months after start month
-      // e.g., Sept 2025 (start_month=9, start_year=2025) -> Aug 2026 (month=8, year=2026)
       let fyEndMonth = fiscalYear.start_month - 1;
       let fyEndYear = fiscalYear.start_year + 1;
       if (fyEndMonth < 1) {
@@ -119,31 +144,31 @@ export default function Dashboard() {
       }
       
       const fyEndDate = new Date(fyEndYear, fyEndMonth - 1);
-      
-      // Calculate new month
-      let newMonth = viewMonth + 1;
-      let newYear = viewYear;
-      if (newMonth > 12) {
-        newMonth = 1;
-        newYear++;
-      }
-      
       const newDate = new Date(newYear, newMonth - 1);
       
-      // Only allow if new date is <= fiscal year end
-      if (newDate <= fyEndDate) {
-        setViewMonth(newMonth);
-        setViewYear(newYear);
-      }
-    } else {
-      // No fiscal year selected (all years mode) - allow any navigation
-      if (viewMonth === 12) { 
-        setViewMonth(1); 
-        setViewYear(viewYear + 1); 
-      } else {
-        setViewMonth(viewMonth + 1);
+      // If we're trying to go after fiscal year end, switch to next fiscal year
+      if (newDate > fyEndDate) {
+        // Find next fiscal year
+        const sortedFYs = [...allFiscalYears].sort((a, b) => {
+          if (a.start_year !== b.start_year) return a.start_year - b.start_year;
+          return a.start_month - b.start_month;
+        });
+        const currentIndex = sortedFYs.findIndex(fy => fy.id === fiscalYear.id);
+        
+        if (currentIndex < sortedFYs.length - 1) {
+          // Switch to next fiscal year (will auto-reset to its start month via useEffect)
+          const nextFY = sortedFYs[currentIndex + 1];
+          setSelectedId(nextFY.id);
+          return;
+        }
+        // No next fiscal year, stay at boundary
+        return;
       }
     }
+    
+    // Normal navigation (no fiscal year or within bounds)
+    setViewMonth(newMonth);
+    setViewYear(newYear);
   }
 
   if (!fiscalYear && fyId !== null) {
