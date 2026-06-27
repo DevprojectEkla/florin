@@ -81,6 +81,11 @@ export default function Dashboard() {
     .filter((c) => c.total < 0 && c.category_slug !== 'transfer.internal')
     .sort((a, b) => a.total - b.total);
 
+  // Treasury movements (transfers between accounts)
+  const monthTransfers = monthCategories
+    .filter((c) => c.category_type === 'transfer')
+    .sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
+
   function prevMonth() {
     // Calculate new month
     let newMonth = viewMonth - 1;
@@ -437,6 +442,50 @@ export default function Dashboard() {
                   </button>
 
                   {/* Drilldown: transactions for this income category */}
+                  {isOpen && (
+                    <CategoryDrilldown
+                      fyId={fyId}
+                      categoryId={cat.category_id}
+                      year={viewYear}
+                      month={viewMonth}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Treasury movements (transfers) - only in month view */}
+      {!isAllYearsMode && !showYearOverview && monthTransfers.length > 0 && (
+        <div className="card">
+          <h2 className="text-sm font-medium text-slate-400 mb-3">
+            💱 {t('dashboard.month_transfers')}
+          </h2>
+          <div className="space-y-1">
+            {monthTransfers.map((cat) => {
+              const isOpen = drilldownCategoryId === cat.category_id;
+              const isPositive = cat.total > 0;
+              return (
+                <div key={cat.category_id ?? 'null'}>
+                  <button
+                    className={`w-full flex items-center gap-3 py-2 px-2 rounded-lg transition-colors text-left ${
+                      isOpen ? 'bg-slate-700/60' : 'hover:bg-slate-700/30'
+                    }`}
+                    onClick={() => setDrilldownCategoryId(isOpen ? undefined : cat.category_id)}
+                  >
+                    <span className="w-6 text-center text-sm">{cat.category_icon ?? '💱'}</span>
+                    <span className="flex-1 text-sm text-slate-200">
+                      {cat.category_label ?? t('transaction.unclassified')}
+                    </span>
+                    <span className={`text-sm font-mono ${isPositive ? 'text-orange-400' : 'text-blue-400'}`}>
+                      {isPositive ? '-' : '+'}{Math.abs(cat.total).toFixed(0)} €
+                    </span>
+                    <span className="text-xs text-slate-500 w-4">{isOpen ? '▼' : '▶'}</span>
+                  </button>
+
+                  {/* Drilldown: transactions for this transfer category */}
                   {isOpen && (
                     <CategoryDrilldown
                       fyId={fyId}
