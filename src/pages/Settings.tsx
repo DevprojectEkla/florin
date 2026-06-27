@@ -25,7 +25,7 @@ export default function Settings() {
   return (
     <div className="flex h-full">
       {/* Section sidebar */}
-      <div className="w-44 border-r border-slate-700 flex-shrink-0 p-3 space-y-1">
+      <div className="w-44 border-r border-slate-700 flex-shrink-0 p-3 space-y-1" style={{ borderColor: 'var(--border-color, #334155)' }}>
         {SECTION_KEYS.map((key) => (
           <button
             key={key}
@@ -35,6 +35,14 @@ export default function Settings() {
                 ? 'bg-florin-500/10 text-florin-400 font-medium'
                 : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
             }`}
+            style={
+              section !== key
+                ? {
+                    color: 'var(--text-secondary, #94a3b8)',
+                    backgroundColor: 'transparent',
+                  }
+                : undefined
+            }
           >
             {t(`settings.sections.${key}`)}
           </button>
@@ -128,7 +136,8 @@ function CategoriesSection() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+            className="text-xs transition-colors"
+            style={{ color: 'var(--text-secondary, #94a3b8)' }}
             onClick={() => setShowArchived((v) => !v)}
           >
             {showArchived ? t('categories.hide_archived') : t('categories.show_archived')}
@@ -227,11 +236,20 @@ function LanguageSection() {
             key={lang}
             onClick={() => switchLang(lang)}
             disabled={saving}
-            className={`px-5 py-3 rounded-xl border text-sm font-medium transition-colors ${
+            className={`px-5 py-3 rounded-xl border text-sm font-medium transition-colors disabled:opacity-50 ${
               current === lang
                 ? 'border-florin-400 bg-florin-500/10 text-florin-400'
-                : 'border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500'
-            } disabled:opacity-50`}
+                : ''
+            }`}
+            style={
+              current !== lang
+                ? {
+                    borderColor: 'var(--border-color, #475569)',
+                    backgroundColor: 'var(--bg-card, #1e293b)',
+                    color: 'var(--text-secondary, #cbd5e1)',
+                  }
+                : undefined
+            }
           >
             {lang === 'fr' ? '🇫🇷' : '🇬🇧'} {t(`settings.language.${lang}`)}
           </button>
