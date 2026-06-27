@@ -82,8 +82,17 @@
   }
 
   .btn-ghost {
-    @apply bg-transparent hover:bg-slate-700 text-slate-300
+    @apply bg-transparent text-slate-300
            px-4 py-2 rounded-lg transition-colors duration-150;
+  }
+  
+  /* Make btn-ghost visible in light mode */
+  .light .btn-ghost {
+    color: #475569; /* slate-600 */
+  }
+  .light .btn-ghost:hover {
+    background-color: #f1f5f9; /* slate-100 */
+    color: #0f172a; /* slate-900 */
   }
 
   .input {
