@@ -44,7 +44,12 @@ export default function Dashboard() {
 
   const { data: unclassified = 0 } = useUnclassifiedCount(fyId);
   const { data: monthly = [] }     = useMonthlyAggregates(fyId);
-  const { data: monthCategories = [] } = useCategoryAggregates(fyId, viewYear, viewMonth);
+  // Only fetch month categories when NOT in year overview mode
+  const { data: monthCategories = [] } = useCategoryAggregates(
+    showYearOverview ? null : fyId, 
+    showYearOverview ? 0 : viewYear, 
+    showYearOverview ? 0 : viewMonth
+  );
 
   // Current selected month data
   const currentMonthData = monthly.find(
@@ -261,9 +266,9 @@ export default function Dashboard() {
         showYearTotal={showYearOverview || isAllYearsMode}
       />
 
-      {/* KPIs: show month data OR all-years totals */}
-      {!isAllYearsMode ? (
-        // Month KPIs (specific fiscal year)
+      {/* KPIs: show month data OR year/all-years totals */}
+      {!isAllYearsMode && !showYearOverview ? (
+        // Month KPIs (specific fiscal year, month view)
         <div className="grid grid-cols-3 gap-4">
           <KpiCard
             label={t('dashboard.month_income')}
@@ -285,7 +290,7 @@ export default function Dashboard() {
           />
         </div>
       ) : (
-        // All-years KPIs
+        // Year totals KPIs (year overview or all-years mode)
         <div className="grid grid-cols-4 gap-4">
           <KpiCard
             label={t('dashboard.total_income')}
@@ -314,8 +319,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Month category breakdown - only for specific fiscal year */}
-      {!isAllYearsMode && monthExpenses.length > 0 && (
+      {/* Month category breakdown - only in month view (not year overview) */}
+      {!isAllYearsMode && !showYearOverview && monthExpenses.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_by_category')}</h2>
           <div className="space-y-1">
@@ -365,8 +370,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Month income - only for specific fiscal year */}
-      {!isAllYearsMode && monthIncome.length > 0 && (
+      {/* Month income - only in month view (not year overview) */}
+      {!isAllYearsMode && !showYearOverview && monthIncome.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_income')}</h2>
           <div className="space-y-1">
@@ -385,8 +390,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* No data for this month - only for specific fiscal year */}
-      {!isAllYearsMode && !currentMonthData && monthExpenses.length === 0 && (
+      {/* No data for this month - only in month view (not year overview) */}
+      {!isAllYearsMode && !showYearOverview && !currentMonthData && monthExpenses.length === 0 && (
         <div className="card text-center py-8 text-slate-500">
           {t('dashboard.no_month_data')}
         </div>
