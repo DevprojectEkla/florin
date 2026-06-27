@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../store/ThemeContext';
+import { getTooltipStyle, getChartColors } from '../../lib/theme-utils';
 import {
   PieChart,
   Pie,
@@ -19,19 +21,13 @@ interface TransactionChartsProps {
   transactions: TransactionWithCategory[];
 }
 
-const COLORS = [
-  '#10b981', // emerald-500
-  '#f59e0b', // amber-500
-  '#ef4444', // red-500
-  '#3b82f6', // blue-500
-  '#8b5cf6', // violet-500
-  '#ec4899', // pink-500
-  '#14b8a6', // teal-500
-  '#f97316', // orange-500
-];
-
 export default function TransactionCharts({ transactions }: TransactionChartsProps) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+
+  // Get theme-aware styles
+  const tooltipStyle = getTooltipStyle(theme);
+  const chartColors = getChartColors(theme);
 
   // Calculate data for charts
   const chartData = useMemo(() => {
@@ -95,7 +91,7 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-8 text-center text-slate-500">
+      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-8 text-center text-slate-500 dark:text-slate-500 light:bg-white light:border-slate-200 light:text-slate-600">
         {t('common.empty')}
       </div>
     );
@@ -104,8 +100,8 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* 1. Category Distribution (Pie Chart) */}
-      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-4">
-        <h3 className="text-sm font-medium text-slate-300 mb-3">
+      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-4 light:bg-white light:border-slate-200">
+        <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-3 light:text-slate-700">
           📊 {t('charts.by_category')}
         </h3>
         <ResponsiveContainer width="100%" height={200}>
@@ -120,18 +116,10 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
               dataKey="value"
             >
               {chartData.categoryData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={entry.color || chartColors.primary[index % chartColors.primary.length]} />
               ))}
             </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                color: '#e2e8f0',
-              }}
-              formatter={(value: number) => `${value.toFixed(0)} €`}
-            />
+            <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => `${value.toFixed(0)} €`} />
           </PieChart>
         </ResponsiveContainer>
         <div className="mt-2 space-y-1 text-xs">
@@ -142,35 +130,27 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: cat.color }}
                 />
-                <span className="text-slate-400 truncate">{cat.name}</span>
+                <span className="text-slate-400 dark:text-slate-400 truncate light:text-slate-600">{cat.name}</span>
               </div>
-              <span className="text-slate-300 font-mono">{cat.value.toFixed(0)}€</span>
+              <span className="text-slate-300 dark:text-slate-300 font-mono light:text-slate-900">{cat.value.toFixed(0)}€</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 2. Top 5 Expenses (Bar Chart) */}
-      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-4">
-        <h3 className="text-sm font-medium text-slate-300 mb-3">
+      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-4 light:bg-white light:border-slate-200">
+        <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-3 light:text-slate-700">
           💰 {t('charts.top_expenses')}
         </h3>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={chartData.topExpenses} layout="vertical">
             <XAxis type="number" hide />
             <YAxis type="category" dataKey="name" hide />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                color: '#e2e8f0',
-              }}
-              formatter={(value: number) => `${value.toFixed(2)} €`}
-            />
+            <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => `${value.toFixed(2)} €`} />
             <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
               {chartData.topExpenses.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={entry.color || chartColors.primary[index % chartColors.primary.length]} />
               ))}
             </Bar>
           </BarChart>
@@ -178,33 +158,28 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
         <div className="mt-2 space-y-1 text-xs">
           {chartData.topExpenses.map((exp, idx) => (
             <div key={idx} className="flex items-center justify-between">
-              <span className="text-slate-400 truncate flex-1">{exp.name}</span>
-              <span className="text-red-400 font-mono ml-2">{exp.amount.toFixed(0)}€</span>
+              <span className="text-slate-400 dark:text-slate-400 truncate flex-1 light:text-slate-600">{exp.name}</span>
+              <span className="text-red-400 dark:text-red-400 font-mono ml-2 light:text-red-600">{exp.amount.toFixed(0)}€</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 3. Timeline (Line Chart) */}
-      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-4">
-        <h3 className="text-sm font-medium text-slate-300 mb-3">
+      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-4 light:bg-white light:border-slate-200">
+        <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-3 light:text-slate-700">
           📈 {t('charts.timeline')}
         </h3>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={chartData.timelineData}>
             <XAxis
               dataKey="date"
-              tick={{ fill: '#64748b', fontSize: 10 }}
+              tick={{ fill: chartColors.text, fontSize: 10 }}
               tickFormatter={(value) => value.slice(5)} // Show MM-DD
             />
             <YAxis hide />
             <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                color: '#e2e8f0',
-              }}
+              contentStyle={tooltipStyle}
               labelFormatter={(value) => `Date: ${value}`}
               formatter={(value: number, name: string) =>
                 name === 'count'
@@ -231,11 +206,11 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
         <div className="mt-2 flex items-center justify-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-red-500" />
-            <span className="text-slate-400">{t('transaction.debit')}</span>
+            <span className="text-slate-400 dark:text-slate-400 light:text-slate-600">{t('transaction.debit')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-emerald-500" />
-            <span className="text-slate-400">{t('transaction.credit')}</span>
+            <span className="text-slate-400 dark:text-slate-400 light:text-slate-600">{t('transaction.credit')}</span>
           </div>
         </div>
       </div>
