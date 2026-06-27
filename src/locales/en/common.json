@@ -128,6 +128,11 @@
     "net_balance": "Net balance",
     "unclassified": "Unclassified"
   },
+  "selection": {
+    "count": "{{count}} transaction(s) selected",
+    "clear": "Clear selection",
+    "select_all": "Select all"
+  },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
     "total_transactions": "Transactions",

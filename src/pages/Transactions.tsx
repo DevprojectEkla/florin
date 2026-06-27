@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
 import { useTransactionFilters } from '../hooks/useTransactionFilters';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
+import { useTransactionSelection } from '../hooks/useTransactionSelection';
 import { splitLabel } from '../lib/utils';
 import { DataTable, ColumnVisibilityMenu } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
+import { SelectionToolbar } from '../components/transactions/SelectionToolbar';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -46,6 +48,30 @@ export default function Transactions() {
   const filtered = useMemo(() => {
     return applyFilters(transactions);
   }, [transactions, applyFilters]);
+
+  // Selection
+  const {
+    selectedIds,
+    selectedCount,
+    toggleItem,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSomeSelected,
+  } = useTransactionSelection(filtered);
+
+  // Handle Cmd/Ctrl+A to select all
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a' && filtered.length > 0) {
+        e.preventDefault();
+        selectAll();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filtered.length, selectAll]);
 
   // Define table columns
   const columns: Column<TransactionWithCategory>[] = useMemo(() => [
@@ -176,6 +202,9 @@ export default function Transactions() {
       {/* Stats Bar */}
       <StatsBar transactions={filtered} isLoading={isLoading} />
 
+      {/* Selection Toolbar */}
+      <SelectionToolbar selectedCount={selectedCount} onClearSelection={clearSelection} />
+
       {/* Count */}
       <p className="text-xs text-slate-500">
         {filtered.length} / {transactions.length} transactions
@@ -191,6 +220,12 @@ export default function Transactions() {
         isLoading={isLoading}
         emptyMessage={t('common.empty')}
         rowKey="id"
+        selectable
+        selectedIds={selectedIds}
+        onSelectItem={toggleItem}
+        onSelectAll={isAllSelected ? clearSelection : selectAll}
+        isAllSelected={isAllSelected}
+        isSomeSelected={isSomeSelected}
       />
     </div>
   );
