@@ -8,7 +8,7 @@ import { useTransactionFilters } from '../hooks/useTransactionFilters';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { useTransactionSelection } from '../hooks/useTransactionSelection';
 import { splitLabel } from '../lib/utils';
-import { DataTable, ColumnVisibilityMenu } from '../components/table';
+import { VirtualDataTable, ColumnVisibilityMenu } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
 import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
@@ -245,8 +245,8 @@ export default function Transactions() {
         {filtered.length} / {transactions.length} transactions
       </p>
 
-      {/* Table */}
-      <DataTable
+      {/* Table - Use VirtualDataTable for better performance with large datasets */}
+      <VirtualDataTable
         data={filtered}
         columns={columns}
         visibleColumns={visibleColumns}
@@ -262,6 +262,8 @@ export default function Transactions() {
         onSelectAll={isAllSelected ? clearSelection : selectAll}
         isAllSelected={isAllSelected}
         isSomeSelected={isSomeSelected}
+        estimatedRowHeight={45}
+        overscan={5}
       />
 
       {/* Transaction Detail Modal */}
