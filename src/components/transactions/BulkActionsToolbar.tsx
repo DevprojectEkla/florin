@@ -77,14 +77,14 @@ export function BulkActionsToolbar({
 
   const isLoading = bulkUpdateCategory.isPending || bulkDelete.isPending;
 
-  // Always render with fixed height to prevent layout shift
+  // Always render with fixed min height to prevent layout shift
   return (
     <>
       <div 
-        className={`rounded-lg px-4 transition-all duration-200 ${
+        className={`rounded-lg px-4 py-3 transition-all duration-200 min-h-[3.5rem] ${
           selectedCount > 0
-            ? 'py-3 bg-florin-500/10 border border-florin-500/30 opacity-100'
-            : 'py-0 h-0 overflow-hidden opacity-0'
+            ? 'bg-florin-500/10 border border-florin-500/30 opacity-100'
+            : 'border border-transparent opacity-0 pointer-events-none'
         }`}
       >
         {selectedCount > 0 && (
