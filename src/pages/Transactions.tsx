@@ -5,8 +5,9 @@ import { useFiscalYear } from '../store/FiscalYearContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
 import { splitLabel } from '../lib/utils';
+import { DataTable } from '../components/table';
+import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
-import type { Category } from '../types';
 
 export default function Transactions() {
   const { t } = useTranslation();
@@ -23,6 +24,9 @@ export default function Transactions() {
 
   const [showFilter, setShowFilter] = useState(filterUnclassified);
   const [search, setSearch] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig[]>([
+    { column: 'date', direction: 'desc' } // Default: newest first
+  ]);
 
   const updateCategory = useUpdateTransactionCategory();
 
@@ -42,6 +46,90 @@ export default function Transactions() {
     }
     return list;
   }, [transactions, showFilter, search]);
+
+  // Define table columns
+  const columns: Column<TransactionWithCategory>[] = useMemo(() => [
+    {
+      id: 'date',
+      label: t('transaction.date'),
+      accessor: 'date',
+      width: 'w-24',
+      render: (value) => (
+        <span className="text-slate-400 text-xs font-mono whitespace-nowrap">
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: 'type',
+      label: t('transaction.type'),
+      accessor: (tx) => splitLabel(tx.label_clean ?? tx.label).type,
+      width: 'w-28',
+      render: (value) => (
+        <span className="text-xs text-slate-500 bg-slate-700/50 px-1.5 py-0.5 rounded whitespace-nowrap">
+          {value || '—'}
+        </span>
+      ),
+    },
+    {
+      id: 'label',
+      label: t('transaction.label'),
+      accessor: (tx) => splitLabel(tx.label_clean ?? tx.label).detail,
+      render: (value, tx) => (
+        <span className="text-slate-200 truncate max-w-xs block" title={tx.label}>
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: 'debit',
+      label: t('transaction.debit'),
+      accessor: 'debit',
+      width: 'w-24',
+      align: 'right',
+      render: (value) => 
+        value ? <span className="amount-debit">{value.toFixed(2)}</span> : null,
+    },
+    {
+      id: 'credit',
+      label: t('transaction.credit'),
+      accessor: 'credit',
+      width: 'w-24',
+      align: 'right',
+      render: (value) =>
+        value ? <span className="amount-credit">{value.toFixed(2)}</span> : null,
+    },
+    {
+      id: 'category',
+      label: t('transaction.category'),
+      accessor: 'category_label',
+      width: 'w-48',
+      sortable: false, // Category edit dropdown, no sort
+      render: (_, tx) => (
+        <select
+          className={`w-full bg-transparent border rounded-md px-2 py-1 text-xs transition-colors cursor-pointer ${
+            tx.category_id
+              ? 'border-slate-600 text-slate-200'
+              : 'border-amber-500/50 text-amber-400'
+          }`}
+          value={tx.category_id ?? ''}
+          onChange={(e) => {
+            e.stopPropagation(); // Don't trigger row click
+            const val = e.target.value;
+            updateCategory.mutate({ id: tx.id, categoryId: val ? parseInt(val) : null });
+          }}
+          onClick={(e) => e.stopPropagation()} // Don't trigger row click
+        >
+          <option value="">{t('transaction.unclassified')}</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.icon} {cat.label}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+  ], [t, categories, updateCategory]);
 
   if (!fyId) {
     return (
@@ -82,98 +170,15 @@ export default function Transactions() {
       </p>
 
       {/* Table */}
-      {isLoading ? (
-        <div className="card text-slate-400">{t('common.loading')}</div>
-      ) : filtered.length === 0 ? (
-        <div className="card text-slate-400">{t('common.empty')}</div>
-      ) : (
-        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-                <th className="px-3 py-2.5 text-left w-24">{t('transaction.date')}</th>
-                <th className="px-3 py-2.5 text-left w-28">{t('transaction.type')}</th>
-                <th className="px-3 py-2.5 text-left">{t('transaction.label')}</th>
-                <th className="px-3 py-2.5 text-right w-24">{t('transaction.debit')}</th>
-                <th className="px-3 py-2.5 text-right w-24">{t('transaction.credit')}</th>
-                <th className="px-3 py-2.5 text-left w-48">{t('transaction.category')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              {filtered.map((tx) => (
-                <TransactionRow
-                  key={tx.id}
-                  tx={tx}
-                  categories={categories}
-                  onCategoryChange={(catId) => updateCategory.mutate({ id: tx.id, categoryId: catId })}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        data={filtered}
+        columns={columns}
+        sortConfig={sortConfig}
+        onSortChange={setSortConfig}
+        isLoading={isLoading}
+        emptyMessage={t('common.empty')}
+        rowKey="id"
+      />
     </div>
-  );
-}
-
-// ─── Transaction row ─────────────────────────────────────────────────────────
-
-function TransactionRow({
-  tx,
-  categories,
-  onCategoryChange,
-}: {
-  tx: TransactionWithCategory;
-  categories: Category[];
-  onCategoryChange: (categoryId: number | null) => void;
-}) {
-  const { t } = useTranslation();
-  const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
-
-  return (
-    <tr className="hover:bg-slate-700/30 transition-colors">
-      <td className="px-3 py-2 text-slate-400 text-xs font-mono whitespace-nowrap">
-        {tx.date}
-      </td>
-      <td className="px-3 py-2">
-        <span className="text-xs text-slate-500 bg-slate-700/50 px-1.5 py-0.5 rounded whitespace-nowrap">
-          {type || '—'}
-        </span>
-      </td>
-      <td className="px-3 py-2 text-slate-200 truncate max-w-xs" title={tx.label}>
-        {detail}
-      </td>
-      <td className="px-3 py-2 text-right">
-        {tx.debit ? (
-          <span className="amount-debit">{tx.debit.toFixed(2)}</span>
-        ) : null}
-      </td>
-      <td className="px-3 py-2 text-right">
-        {tx.credit ? (
-          <span className="amount-credit">{tx.credit.toFixed(2)}</span>
-        ) : null}
-      </td>
-      <td className="px-3 py-2">
-        <select
-          className={`w-full bg-transparent border rounded-md px-2 py-1 text-xs transition-colors cursor-pointer ${
-            tx.category_id
-              ? 'border-slate-600 text-slate-200'
-              : 'border-amber-500/50 text-amber-400'
-          }`}
-          value={tx.category_id ?? ''}
-          onChange={(e) => {
-            const val = e.target.value;
-            onCategoryChange(val ? parseInt(val) : null);
-          }}
-        >
-          <option value="">{t('transaction.unclassified')}</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.icon} {cat.label}
-            </option>
-          ))}
-        </select>
-      </td>
-    </tr>
   );
 }
