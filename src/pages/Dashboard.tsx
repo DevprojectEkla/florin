@@ -415,17 +415,38 @@ export default function Dashboard() {
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_income')}</h2>
           <div className="space-y-1">
-            {monthIncome.map((cat) => (
-              <div key={cat.category_id ?? 'null'} className="flex items-center gap-3">
-                <span className="w-6 text-center text-sm">{cat.category_icon ?? '💰'}</span>
-                <span className="flex-1 text-sm text-slate-200">
-                  {cat.category_label ?? t('transaction.unclassified')}
-                </span>
-                <span className="text-sm font-mono text-green-400">
-                  +{Math.abs(cat.total).toFixed(0)} €
-                </span>
-              </div>
-            ))}
+            {monthIncome.map((cat) => {
+              const isOpen = drilldownCategoryId === cat.category_id;
+              return (
+                <div key={cat.category_id ?? 'null'}>
+                  <button
+                    className={`w-full flex items-center gap-3 py-2 px-2 rounded-lg transition-colors text-left ${
+                      isOpen ? 'bg-slate-700/60' : 'hover:bg-slate-700/30'
+                    }`}
+                    onClick={() => setDrilldownCategoryId(isOpen ? undefined : cat.category_id)}
+                  >
+                    <span className="w-6 text-center text-sm">{cat.category_icon ?? '💰'}</span>
+                    <span className="flex-1 text-sm text-slate-200">
+                      {cat.category_label ?? t('transaction.unclassified')}
+                    </span>
+                    <span className="text-sm font-mono text-green-400">
+                      +{Math.abs(cat.total).toFixed(0)} €
+                    </span>
+                    <span className="text-xs text-slate-500 w-4">{isOpen ? '▼' : '▶'}</span>
+                  </button>
+
+                  {/* Drilldown: transactions for this income category */}
+                  {isOpen && (
+                    <CategoryDrilldown
+                      fyId={fyId}
+                      categoryId={cat.category_id}
+                      year={viewYear}
+                      month={viewMonth}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
