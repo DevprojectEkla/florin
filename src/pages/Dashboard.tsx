@@ -647,9 +647,10 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
 
   if (!transactions || transactions.length === 0) return null;
 
-  // Calculate investments by savings category
+  // Calculate investments by savings category (NET: credit - debit)
+  // For LEP and other savings, we want: deposits (credit) - withdrawals (debit)
   const investments = transactions
-    .filter(tx => tx.category_type === 'savings' && tx.debit && tx.debit > 0)
+    .filter(tx => tx.category_type === 'savings')
     .reduce((acc, tx) => {
       const key = tx.category_slug || 'unknown';
       if (!acc[key]) {
@@ -661,7 +662,9 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
           transactions: [],
         };
       }
-      acc[key].total += tx.debit || 0;
+      // Net savings = credit (deposits) - debit (withdrawals)
+      const netAmount = (tx.credit || 0) - (tx.debit || 0);
+      acc[key].total += netAmount;
       acc[key].count += 1;
       acc[key].transactions.push(tx);
       return acc;
@@ -706,7 +709,7 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
                     <div className="flex-1">
                       <div className="text-sm text-slate-300 font-medium">{inv.label}</div>
                       <div className="text-xs text-slate-500">
-                        {inv.count} {inv.count === 1 ? 'versement' : 'versements'}
+                        {inv.count} {inv.count === 1 ? 'opération' : 'opérations'}
                       </div>
                     </div>
                   </div>
