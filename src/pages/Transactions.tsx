@@ -9,12 +9,14 @@ import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { useTransactionSelection } from '../hooks/useTransactionSelection';
 import { usePagination } from '../hooks/usePagination';
 import { splitLabel } from '../lib/utils';
+import { parseSearchQuery, applySearchQuery } from '../lib/searchParser';
 import { DataTable, VirtualDataTable, ColumnVisibilityMenu, PaginationControls } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
 import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
 import { TransactionDetailModal } from '../components/transactions/TransactionDetailModal';
 import { ExportMenu } from '../components/transactions/ExportMenu';
+import { AdvancedSearchInput } from '../components/transactions/AdvancedSearchInput';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -69,8 +71,16 @@ export default function Transactions() {
 
   // Apply filters
   const filtered = useMemo(() => {
-    return applyFilters(transactions);
-  }, [transactions, applyFilters]);
+    let result = applyFilters(transactions);
+    
+    // Apply advanced search if present
+    if (filters.search) {
+      const searchQuery = parseSearchQuery(filters.search);
+      result = applySearchQuery(result, searchQuery);
+    }
+    
+    return result;
+  }, [transactions, applyFilters, filters.search]);
 
   // Apply pagination if in paginated mode
   const displayData = viewMode === 'paginated' 
@@ -252,12 +262,11 @@ export default function Transactions() {
             onResetToDefaults={resetToDefaults}
           />
 
-          {/* Search */}
-          <input
-            className="input w-60"
-            placeholder={t('transactions.search')}
+          {/* Advanced Search */}
+          <AdvancedSearchInput
             value={filters.search || ''}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            onChange={(value) => setFilters({ ...filters, search: value })}
+            placeholder={t('transactions.search')}
           />
         </div>
       </div>
