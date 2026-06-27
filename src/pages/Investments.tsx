@@ -6,6 +6,7 @@ import {
   useCreateVehicle, useCreatePosition, useDeletePosition,
 } from '../hooks/usePortfolio';
 import Modal from '../components/ui/Modal';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 const RISK_COLORS: Record<string, string> = {
   'stable':          '#22c55e',
@@ -26,6 +27,7 @@ export default function Investments() {
 
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [showAddPosition, setShowAddPosition] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const createVehicleMut = useCreateVehicle();
   const createPositionMut = useCreatePosition();
@@ -132,7 +134,6 @@ export default function Investments() {
                 <th className="px-3 py-2.5 text-left">{t('portfolio.sector')}</th>
                 <th className="px-3 py-2.5 text-left w-24">{t('portfolio.risk')}</th>
                 <th className="px-3 py-2.5 text-right w-24">{t('portfolio.amount')}</th>
-                <th className="px-3 py-2.5 w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
@@ -154,9 +155,10 @@ export default function Investments() {
                   <td className="px-3 py-2 text-right font-mono text-slate-200">{pos.amount.toFixed(0)} €</td>
                   <td className="px-3 py-2">
                     <button
-                      className="text-xs text-slate-500 hover:text-red-400"
-                      onClick={() => deletePositionMut.mutate(pos.id)}
-                    >��️</button>
+                      className="text-xs text-red-500 hover:text-red-400 transition-colors font-bold"
+                      onClick={() => setDeleteTarget(pos.id)}
+                      title={t('common.delete')}
+                    >DEL</button>
                   </td>
                 </tr>
               ))}
@@ -192,6 +194,22 @@ export default function Investments() {
           await createPositionMut.mutateAsync(data);
           setShowAddPosition(false);
         }}
+      />
+
+      {/* Delete Position Confirmation */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title={t('portfolio.delete_position_title')}
+        message={t('portfolio.delete_position_message')}
+        confirmLabel={t('common.delete')}
+        danger={true}
+        onConfirm={async () => {
+          if (deleteTarget) {
+            await deletePositionMut.mutateAsync(deleteTarget);
+            setDeleteTarget(null);
+          }
+        }}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );
