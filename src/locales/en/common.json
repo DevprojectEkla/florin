@@ -157,6 +157,22 @@
     "hint": "Select transactions to perform bulk actions",
     "shortcut": "Ctrl/Cmd+A to select all"
   },
+  "export": {
+    "export": "Export",
+    "csv": "Export as CSV",
+    "excel": "Export as Excel",
+    "json": "Export as JSON",
+    "options_title": "Export Options",
+    "format": "Format",
+    "scope": "Data to export",
+    "scope_current": "Current view (filtered)",
+    "scope_selected": "Selected only",
+    "scope_all": "All transactions in fiscal year",
+    "info": "Export will include: date, label, amounts, category, notes, and out-of-budget status.",
+    "exporting": "Exporting...",
+    "no_data": "No data to export",
+    "error": "Error during export"
+  },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
     "total_transactions": "Transactions",

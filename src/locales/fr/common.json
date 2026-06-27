@@ -157,6 +157,22 @@
     "hint": "Sélectionnez des transactions pour effectuer des actions groupées",
     "shortcut": "Ctrl/Cmd+A pour tout sélectionner"
   },
+  "export": {
+    "export": "Exporter",
+    "csv": "Exporter en CSV",
+    "excel": "Exporter en Excel",
+    "json": "Exporter en JSON",
+    "options_title": "Options d'export",
+    "format": "Format",
+    "scope": "Données à exporter",
+    "scope_current": "Vue actuelle (filtrée)",
+    "scope_selected": "Sélection uniquement",
+    "scope_all": "Toutes les transactions de l'exercice",
+    "info": "L'export inclura : date, libellé, montants, catégorie, notes et statut hors budget.",
+    "exporting": "Export en cours...",
+    "no_data": "Aucune donnée à exporter",
+    "error": "Erreur lors de l'export"
+  },
   "dashboard": {
     "no_data":            "Aucune donnée — importez un relevé bancaire pour commencer.",
     "total_transactions": "Transactions",
