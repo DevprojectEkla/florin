@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  /* Dark mode (default) */
   :root {
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
@@ -12,13 +13,34 @@
     --accent: #eab308;
   }
 
+  /* Light mode */
+  .light {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --accent: #eab308;
+  }
+
   * {
-    @apply border-slate-700;
+    @apply border-slate-700 dark:border-slate-700;
+  }
+
+  .light * {
+    @apply border-slate-200;
   }
 
   body {
-    @apply bg-slate-900 text-slate-100 font-sans antialiased;
-    /* Prevent text selection on UI chrome */
+    @apply bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 font-sans antialiased;
+  }
+
+  .light body {
+    @apply bg-white text-slate-900;
+  }
+
+  /* Prevent text selection on UI chrome */
+  body {
     user-select: none;
   }
 
@@ -27,13 +49,27 @@
     user-select: text;
   }
 
-  /* Fix native select dropdown colors on dark backgrounds (WebKit/Tauri) */
+  /* Fix native select dropdown colors - respect theme */
   select {
+    color-scheme: light dark;
+  }
+  
+  /* Dark mode selects */
+  .dark select {
     color-scheme: dark;
   }
-  select option {
+  .dark select option {
     background-color: #1e293b;
     color: #e2e8f0;
+  }
+  
+  /* Light mode selects */
+  .light select {
+    color-scheme: light;
+  }
+  .light select option {
+    background-color: #ffffff;
+    color: #0f172a;
   }
 
   /* Custom scrollbar */
@@ -47,6 +83,10 @@
   .card {
     @apply bg-slate-800 rounded-xl border border-slate-700 p-4;
   }
+  
+  .light .card {
+    @apply bg-white border-slate-200;
+  }
 
   .btn-primary {
     @apply bg-florin-500 hover:bg-florin-400 text-slate-900 font-semibold
@@ -57,11 +97,19 @@
     @apply bg-transparent hover:bg-slate-700 text-slate-300
            px-4 py-2 rounded-lg transition-colors duration-150;
   }
+  
+  .light .btn-ghost {
+    @apply hover:bg-slate-100 text-slate-700;
+  }
 
   .input {
     @apply bg-slate-700 border border-slate-600 rounded-lg px-3 py-2
            text-slate-100 placeholder-slate-400 focus:outline-none
            focus:ring-2 focus:ring-florin-500 focus:border-transparent w-full;
+  }
+  
+  .light .input {
+    @apply bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-500;
   }
 
   .badge {
@@ -71,4 +119,8 @@
   .amount-debit  { @apply text-red-400 font-mono; }
   .amount-credit { @apply text-green-400 font-mono; }
   .amount-zero   { @apply text-slate-400 font-mono; }
+  
+  .light .amount-debit  { @apply text-red-600; }
+  .light .amount-credit { @apply text-green-600; }
+  .light .amount-zero   { @apply text-slate-600; }
 }
