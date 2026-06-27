@@ -171,7 +171,8 @@
     "info": "Export will include: date, label, amounts, category, notes, and out-of-budget status.",
     "exporting": "Exporting...",
     "no_data": "No data to export",
-    "error": "Error during export"
+    "error": "Error during export",
+    "success": "File exported successfully!"
   },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
