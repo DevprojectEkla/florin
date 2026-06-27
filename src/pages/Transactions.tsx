@@ -7,8 +7,9 @@ import { useActiveCategories } from '../hooks/useCategories';
 import { useTransactionFilters } from '../hooks/useTransactionFilters';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { useTransactionSelection } from '../hooks/useTransactionSelection';
+import { usePagination } from '../hooks/usePagination';
 import { splitLabel } from '../lib/utils';
-import { VirtualDataTable, ColumnVisibilityMenu } from '../components/table';
+import { DataTable, VirtualDataTable, ColumnVisibilityMenu, PaginationControls } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
 import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
@@ -26,6 +27,23 @@ export default function Transactions() {
 
   // Support "All Years" mode when fyId is null
   const { data: transactions = [], isLoading } = useTransactions(fyId ?? null);
+
+  // View mode: 'virtual' or 'paginated'
+  const [viewMode, setViewMode] = useState<'virtual' | 'paginated'>(() => {
+    const stored = localStorage.getItem('transactions:viewMode');
+    return (stored === 'paginated' ? 'paginated' : 'virtual') as 'virtual' | 'paginated';
+  });
+
+  // Pagination
+  const pagination = usePagination({
+    storageKey: 'transactions',
+    defaultItemsPerPage: 50,
+  });
+
+  // Save view mode preference
+  useEffect(() => {
+    localStorage.setItem('transactions:viewMode', viewMode);
+  }, [viewMode]);
 
   const [sortConfig, setSortConfig] = useState<SortConfig[]>([
     { column: 'date', direction: 'desc' } // Default: newest first
@@ -54,6 +72,11 @@ export default function Transactions() {
     return applyFilters(transactions);
   }, [transactions, applyFilters]);
 
+  // Apply pagination if in paginated mode
+  const displayData = viewMode === 'paginated' 
+    ? pagination.getPaginatedData(filtered)
+    : filtered;
+
   // Detail modal
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithCategory | null>(null);
   const selectedIndex = selectedTransaction 
@@ -77,7 +100,7 @@ export default function Transactions() {
     clearSelection,
     isAllSelected,
     isSomeSelected,
-  } = useTransactionSelection(filtered);
+  } = useTransactionSelection(displayData); // Use displayData for selection in paginated mode
 
   // Handle Cmd/Ctrl+A to select all
   useEffect(() => {
@@ -188,6 +211,32 @@ export default function Transactions() {
         <h1 className="text-2xl font-bold text-slate-100">{t('nav.transactions')}</h1>
         
         <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg">
+            <button
+              onClick={() => setViewMode('virtual')}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                viewMode === 'virtual'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Virtual scrolling (meilleur pour >1000 lignes)"
+            >
+              ∞ Virtual
+            </button>
+            <button
+              onClick={() => setViewMode('paginated')}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                viewMode === 'paginated'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Pages (classique)"
+            >
+              📄 Pages
+            </button>
+          </div>
+
           {/* Export Menu */}
           <ExportMenu
             transactions={filtered}
@@ -235,29 +284,60 @@ export default function Transactions() {
 
       {/* Count */}
       <p className="text-xs text-slate-500">
-        {filtered.length} / {transactions.length} transactions
+        {viewMode === 'paginated' 
+          ? `${displayData.length} transactions (page ${pagination.currentPage})`
+          : `${filtered.length} / ${transactions.length} transactions`}
       </p>
 
-      {/* Table - Use VirtualDataTable for better performance with large datasets */}
-      <VirtualDataTable
-        data={filtered}
-        columns={columns}
-        visibleColumns={visibleColumns}
-        sortConfig={sortConfig}
-        onSortChange={setSortConfig}
-        isLoading={isLoading}
-        emptyMessage={t('common.empty')}
-        rowKey="id"
-        onRowClick={(row) => setSelectedTransaction(row)}
-        selectable
-        selectedIds={selectedIds}
-        onSelectItem={toggleItem}
-        onSelectAll={isAllSelected ? clearSelection : selectAll}
-        isAllSelected={isAllSelected}
-        isSomeSelected={isSomeSelected}
-        estimatedRowHeight={45}
-        overscan={5}
-      />
+      {/* Table - Virtual or Paginated */}
+      {viewMode === 'virtual' ? (
+        <VirtualDataTable
+          data={displayData}
+          columns={columns}
+          visibleColumns={visibleColumns}
+          sortConfig={sortConfig}
+          onSortChange={setSortConfig}
+          isLoading={isLoading}
+          emptyMessage={t('common.empty')}
+          rowKey="id"
+          onRowClick={(row) => setSelectedTransaction(row)}
+          selectable
+          selectedIds={selectedIds}
+          onSelectItem={toggleItem}
+          onSelectAll={isAllSelected ? clearSelection : selectAll}
+          isAllSelected={isAllSelected}
+          isSomeSelected={isSomeSelected}
+          estimatedRowHeight={45}
+          overscan={5}
+        />
+      ) : (
+        <div>
+          <DataTable
+            data={displayData}
+            columns={columns}
+            visibleColumns={visibleColumns}
+            sortConfig={sortConfig}
+            onSortChange={setSortConfig}
+            isLoading={isLoading}
+            emptyMessage={t('common.empty')}
+            rowKey="id"
+            onRowClick={(row) => setSelectedTransaction(row)}
+            selectable
+            selectedIds={selectedIds}
+            onSelectItem={toggleItem}
+            onSelectAll={isAllSelected ? clearSelection : selectAll}
+            isAllSelected={isAllSelected}
+            isSomeSelected={isSomeSelected}
+          />
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalItems={filtered.length}
+            itemsPerPage={pagination.itemsPerPage}
+            onPageChange={pagination.setCurrentPage}
+            onItemsPerPageChange={pagination.setItemsPerPage}
+          />
+        </div>
+      )}
 
       {/* Transaction Detail Modal */}
       <TransactionDetailModal

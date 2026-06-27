@@ -134,6 +134,14 @@
     "reset_defaults": "Réinitialiser",
     "visible_count": "{{count}} sur {{total}} visibles"
   },
+  "pagination": {
+    "items_per_page": "Par page",
+    "showing": "{{start}}-{{end}} sur {{total}}",
+    "first_page": "Première page",
+    "previous_page": "Page précédente",
+    "next_page": "Page suivante",
+    "last_page": "Dernière page"
+  },
   "stats": {
     "total_transactions": "Total transactions",
     "total_debit": "Total dépenses",
