@@ -779,7 +779,11 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="text-lg font-bold text-emerald-400">
+                    <div className={`text-lg font-bold ${
+                      slug === 'savings.lep' && inv.total < 0 
+                        ? 'text-red-400' 
+                        : 'text-emerald-400'
+                    }`}>
                       {inv.total.toFixed(0)} €
                     </div>
                     <span className="text-xs text-slate-500 w-4">{isExpanded ? '▼' : '▶'}</span>
