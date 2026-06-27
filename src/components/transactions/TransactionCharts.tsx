@@ -12,7 +12,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import type { TransactionWithCategory } from '../../db/transactions';
 
