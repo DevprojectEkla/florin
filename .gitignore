@@ -31,3 +31,14 @@ npm-debug.log*
 *.db
 *.db-shm
 *.db-wal
+
+# Android Release files (keystores, builds)
+*.jks
+*.keystore
+*.apk
+*.aab
+src-tauri/gen/android/gradle/gradle-daemon-jvm.properties
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/app/release/
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/build/
