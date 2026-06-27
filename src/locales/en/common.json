@@ -297,6 +297,8 @@
     "sector":          "Sector",
     "risk":            "Risk",
     "amount":          "Amount",
-    "empty":           "No investments — add a vehicle to get started"
+    "empty":           "No investments — add a vehicle to get started",
+    "delete_position_title": "Delete this position?",
+    "delete_position_message": "This position will be permanently deleted."
   }
 }
