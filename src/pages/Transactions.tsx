@@ -24,7 +24,8 @@ export default function Transactions() {
   const { selectedId: fyId, selected: selectedFiscalYear } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
 
-  const { data: transactions = [], isLoading } = useTransactions(fyId);
+  // Support "All Years" mode when fyId is null
+  const { data: transactions = [], isLoading } = useTransactions(fyId ?? null);
 
   const [sortConfig, setSortConfig] = useState<SortConfig[]>([
     { column: 'date', direction: 'desc' } // Default: newest first
@@ -179,14 +180,6 @@ export default function Transactions() {
       ),
     },
   ], [t, categories, updateCategory, theme]);
-
-  if (!fyId) {
-    return (
-      <div className="p-6">
-        <div className="card text-slate-400">{t('dashboard.no_data')}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-4">
