@@ -4,8 +4,9 @@ import { useFiscalYear } from '../store/FiscalYearContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
 import { useTransactionFilters } from '../hooks/useTransactionFilters';
+import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { splitLabel } from '../lib/utils';
-import { DataTable } from '../components/table';
+import { DataTable, ColumnVisibilityMenu } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
@@ -32,6 +33,13 @@ export default function Transactions() {
     activeFilterCount,
     applyFilters,
   } = useTransactionFilters();
+
+  // Column visibility
+  const defaultVisibleColumns = ['date', 'type', 'label', 'debit', 'credit', 'category'];
+  const { visibleColumns, toggleColumn, resetToDefaults } = useColumnVisibility(
+    'transactions',
+    defaultVisibleColumns
+  );
 
   // Apply filters
   const filtered = useMemo(() => {
@@ -136,13 +144,23 @@ export default function Transactions() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-100">{t('nav.transactions')}</h1>
         
-        {/* Search */}
-        <input
-          className="input w-60"
-          placeholder={t('transactions.search')}
-          value={filters.search || ''}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-        />
+        <div className="flex items-center gap-3">
+          {/* Column Visibility */}
+          <ColumnVisibilityMenu
+            columns={columns}
+            visibleColumns={visibleColumns}
+            onVisibilityChange={toggleColumn}
+            onResetToDefaults={resetToDefaults}
+          />
+
+          {/* Search */}
+          <input
+            className="input w-60"
+            placeholder={t('transactions.search')}
+            value={filters.search || ''}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          />
+        </div>
       </div>
 
       {/* Filters */}
@@ -163,6 +181,7 @@ export default function Transactions() {
       <DataTable
         data={filtered}
         columns={columns}
+        visibleColumns={visibleColumns}
         sortConfig={sortConfig}
         onSortChange={setSortConfig}
         isLoading={isLoading}

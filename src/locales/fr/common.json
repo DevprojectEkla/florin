@@ -114,6 +114,13 @@
     "search": "Rechercher…",
     "unclassified_only": "Non classées"
   },
+  "table": {
+    "column_visibility": "Afficher/masquer les colonnes",
+    "columns": "Colonnes",
+    "show_columns": "Afficher les colonnes",
+    "reset_defaults": "Réinitialiser",
+    "visible_count": "{{count}} sur {{total}} visibles"
+  },
   "dashboard": {
     "no_data":            "Aucune donnée — importez un relevé bancaire pour commencer.",
     "total_transactions": "Transactions",

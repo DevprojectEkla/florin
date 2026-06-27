@@ -114,6 +114,13 @@
     "search": "Search…",
     "unclassified_only": "Unclassified"
   },
+  "table": {
+    "column_visibility": "Show/hide columns",
+    "columns": "Columns",
+    "show_columns": "Show columns",
+    "reset_defaults": "Reset",
+    "visible_count": "{{count}} of {{total}} visible"
+  },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
     "total_transactions": "Transactions",
