@@ -6,6 +6,7 @@ import type { DataTableProps, SortConfig, SortDirection } from './types';
 export function DataTable<T>({
   data,
   columns,
+  visibleColumns,
   sortConfig: externalSortConfig,
   onSortChange,
   isLoading = false,
@@ -19,6 +20,12 @@ export function DataTable<T>({
   
   const sortConfig = externalSortConfig ?? internalSortConfig;
   const setSortConfig = onSortChange ?? setInternalSortConfig;
+
+  // Filter visible columns
+  const displayColumns = useMemo(() => {
+    if (!visibleColumns) return columns;
+    return columns.filter(col => visibleColumns.has(col.id));
+  }, [columns, visibleColumns]);
 
   // Handle column sort
   const handleSort = (columnId: string, addToExisting: boolean) => {
@@ -69,7 +76,7 @@ export function DataTable<T>({
 
     return [...data].sort((a, b) => {
       for (const config of sortConfig) {
-        const column = columns.find(c => c.id === config.column);
+        const column = displayColumns.find(c => c.id === config.column);
         if (!column || !config.direction) continue;
 
         let aVal: any;
@@ -104,7 +111,7 @@ export function DataTable<T>({
       }
       return 0;
     });
-  }, [data, sortConfig, columns]);
+  }, [data, sortConfig, displayColumns]);
 
   // Get row key
   const getRowKey = (row: T, index: number): string | number => {
@@ -136,7 +143,7 @@ export function DataTable<T>({
     <div className={`bg-slate-800 rounded-xl border border-slate-700 overflow-hidden ${className}`}>
       <table className="w-full text-sm">
         <TableHeader 
-          columns={columns} 
+          columns={displayColumns} 
           sortConfig={sortConfig} 
           onSort={handleSort} 
         />
@@ -145,7 +152,7 @@ export function DataTable<T>({
             <TableRow
               key={getRowKey(row, index)}
               row={row}
-              columns={columns}
+              columns={displayColumns}
               onClick={onRowClick}
             />
           ))}
