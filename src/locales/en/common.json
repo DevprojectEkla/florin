@@ -90,6 +90,17 @@
     "unclassified":   "Unclassified",
     "pending_review": "Needs review"
   },
+  "transaction_detail": {
+    "title": "Transaction Details",
+    "amount": "Amount",
+    "original_label": "Original label",
+    "no_notes": "No notes",
+    "created_at": "Created at",
+    "import_batch": "Import batch",
+    "previous": "Previous",
+    "next": "Next",
+    "unsaved_changes": "You have unsaved changes. Close anyway?"
+  },
   "filters": {
     "filters": "Filters",
     "active": "Active",
