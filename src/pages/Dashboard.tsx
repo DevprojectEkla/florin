@@ -189,20 +189,60 @@ export default function Dashboard() {
     );
   }
 
+  // Navigate between fiscal years
+  function prevFiscalYear() {
+    if (!fiscalYear) return;
+    const sortedFYs = [...allFiscalYears].sort((a, b) => {
+      if (a.start_year !== b.start_year) return a.start_year - b.start_year;
+      return a.start_month - b.start_month;
+    });
+    const currentIndex = sortedFYs.findIndex(fy => fy.id === fiscalYear.id);
+    if (currentIndex > 0) {
+      setSelectedId(sortedFYs[currentIndex - 1].id);
+    }
+  }
+
+  function nextFiscalYear() {
+    if (!fiscalYear) return;
+    const sortedFYs = [...allFiscalYears].sort((a, b) => {
+      if (a.start_year !== b.start_year) return a.start_year - b.start_year;
+      return a.start_month - b.start_month;
+    });
+    const currentIndex = sortedFYs.findIndex(fy => fy.id === fiscalYear.id);
+    if (currentIndex < sortedFYs.length - 1) {
+      setSelectedId(sortedFYs[currentIndex + 1].id);
+    }
+  }
+
   // When fyId is null, we're in "all years" mode
   const isAllYearsMode = fyId === null;
 
   return (
     <div className="p-6 space-y-5">
-      {/* Header with month picker - hidden in all years mode */}
+      {/* Header - changes based on view mode */}
       {!isAllYearsMode && (
         <div className="flex items-center justify-between">
+          {/* Navigation: Monthly or Yearly depending on view */}
           <div className="flex items-center gap-4">
-            <button className="btn-ghost px-2 py-1" onClick={prevMonth}>←</button>
-            <h1 className="text-xl font-bold text-slate-100 w-48 text-center">
-              {t(`months.${viewMonth}`)} {viewYear}
-            </h1>
-            <button className="btn-ghost px-2 py-1" onClick={nextMonth}>→</button>
+            {showYearOverview ? (
+              <>
+                {/* Year navigation */}
+                <button className="btn-ghost px-2 py-1" onClick={prevFiscalYear}>←</button>
+                <h1 className="text-xl font-bold text-slate-100 w-48 text-center">
+                  {fiscalYear?.label}
+                </h1>
+                <button className="btn-ghost px-2 py-1" onClick={nextFiscalYear}>→</button>
+              </>
+            ) : (
+              <>
+                {/* Month navigation */}
+                <button className="btn-ghost px-2 py-1" onClick={prevMonth}>←</button>
+                <h1 className="text-xl font-bold text-slate-100 w-48 text-center">
+                  {t(`months.${viewMonth}`)} {viewYear}
+                </h1>
+                <button className="btn-ghost px-2 py-1" onClick={nextMonth}>→</button>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {unclassified > 0 && (
