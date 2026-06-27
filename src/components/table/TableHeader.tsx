@@ -45,7 +45,7 @@ export function TableHeader<T>({
                 }
               }}
               onChange={onSelectAll}
-              className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-florin-500 focus:ring-florin-500 focus:ring-offset-0"
+              className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-florin-500 focus:ring-2 focus:ring-florin-500 focus:ring-offset-0 transition-all duration-150 cursor-pointer hover:border-florin-400"
               title="Select all"
             />
           </th>
