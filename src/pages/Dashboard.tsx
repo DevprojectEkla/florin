@@ -728,8 +728,20 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
 
   // For LEP savings: subtract internal transfers (withdrawals)
   // This gives us net savings = deposits - withdrawals
-  if (investments['savings.lep']) {
-    investments['savings.lep'].total -= internalTransferCredits;
+  // If there are withdrawals but no deposits, show LEP as negative
+  if (internalTransferCredits > 0) {
+    if (!investments['savings.lep']) {
+      // No LEP deposits this period, but there are withdrawals
+      investments['savings.lep'] = {
+        label: 'Épargne LEP',
+        icon: '🏦',
+        total: -internalTransferCredits,
+        count: 0,
+        transactions: [],
+      };
+    } else {
+      investments['savings.lep'].total -= internalTransferCredits;
+    }
   }
 
   const investmentsList = Object.entries(investments)
@@ -771,7 +783,10 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
                     <div className="flex-1">
                       <div className="text-sm text-slate-300 font-medium">{inv.label}</div>
                       <div className="text-xs text-slate-500">
-                        {inv.count} {inv.count === 1 ? 'versement' : 'versements'}
+                        {inv.count > 0 
+                          ? `${inv.count} ${inv.count === 1 ? 'versement' : 'versements'}`
+                          : 'Aucun versement'
+                        }
                         {slug === 'savings.lep' && internalTransferCredits > 0 && 
                           ` (net après ${internalTransferCredits.toFixed(0)}€ retraits)`
                         }
