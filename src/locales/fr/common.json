@@ -128,6 +128,11 @@
     "net_balance": "Solde net",
     "unclassified": "Non classées"
   },
+  "selection": {
+    "count": "{{count}} transaction(s) sélectionnée(s)",
+    "clear": "Effacer la sélection",
+    "select_all": "Tout sélectionner"
+  },
   "dashboard": {
     "no_data":            "Aucune donnée — importez un relevé bancaire pour commencer.",
     "total_transactions": "Transactions",

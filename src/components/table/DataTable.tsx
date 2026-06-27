@@ -14,6 +14,12 @@ export function DataTable<T>({
   rowKey,
   onRowClick,
   className = '',
+  selectable = false,
+  selectedIds = new Set(),
+  onSelectItem,
+  onSelectAll,
+  isAllSelected = false,
+  isSomeSelected = false,
 }: DataTableProps<T>) {
   // Internal sort state (if not controlled)
   const [internalSortConfig, setInternalSortConfig] = useState<SortConfig[]>([]);
@@ -145,17 +151,27 @@ export function DataTable<T>({
         <TableHeader 
           columns={displayColumns} 
           sortConfig={sortConfig} 
-          onSort={handleSort} 
+          onSort={handleSort}
+          selectable={selectable}
+          isAllSelected={isAllSelected}
+          isSomeSelected={isSomeSelected}
+          onSelectAll={onSelectAll}
         />
         <tbody className="divide-y divide-slate-700/50">
-          {sortedData.map((row, index) => (
-            <TableRow
-              key={getRowKey(row, index)}
-              row={row}
-              columns={displayColumns}
-              onClick={onRowClick}
-            />
-          ))}
+          {sortedData.map((row, index) => {
+            const key = getRowKey(row, index);
+            return (
+              <TableRow
+                key={key}
+                row={row}
+                columns={displayColumns}
+                onClick={onRowClick}
+                selectable={selectable}
+                isSelected={selectedIds.has(Number(key))}
+                onSelectItem={() => onSelectItem?.(Number(key))}
+              />
+            );
+          })}
         </tbody>
       </table>
     </div>
