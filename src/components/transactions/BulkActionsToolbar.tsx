@@ -77,12 +77,19 @@ export function BulkActionsToolbar({
 
   const isLoading = bulkUpdateCategory.isPending || bulkDelete.isPending;
 
-  if (selectedCount === 0) return null;
-
+  // Always render with fixed height to prevent layout shift
   return (
     <>
-      <div className="bg-florin-500/10 border border-florin-500/30 rounded-lg px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div 
+        className={`rounded-lg px-4 transition-all duration-200 ${
+          selectedCount > 0
+            ? 'py-3 bg-florin-500/10 border border-florin-500/30 opacity-100'
+            : 'py-0 h-0 overflow-hidden opacity-0'
+        }`}
+      >
+        {selectedCount > 0 && (
+          <>
+            <div className="flex items-center justify-between">
           {/* Selection Count */}
           <span className="text-sm font-medium text-florin-300">
             {t('selection.count', { count: selectedCount })}
@@ -131,6 +138,8 @@ export function BulkActionsToolbar({
           <div className="mt-2 text-xs text-slate-400">
             {t('bulk.processing')}...
           </div>
+        )}
+          </>
         )}
       </div>
 
