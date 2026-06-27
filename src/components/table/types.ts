@@ -28,4 +28,11 @@ export interface DataTableProps<T = any> {
   rowKey: keyof T | ((row: T) => string | number);
   onRowClick?: (row: T) => void;
   className?: string;
+  // Selection props
+  selectable?: boolean;
+  selectedIds?: Set<number>;
+  onSelectItem?: (id: number) => void;
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
+  isSomeSelected?: boolean;
 }

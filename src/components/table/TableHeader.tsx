@@ -4,9 +4,21 @@ interface TableHeaderProps<T = any> {
   columns: Column<T>[];
   sortConfig: SortConfig[];
   onSort: (columnId: string, addToExisting: boolean) => void;
+  selectable?: boolean;
+  isAllSelected?: boolean;
+  isSomeSelected?: boolean;
+  onSelectAll?: () => void;
 }
 
-export function TableHeader<T>({ columns, sortConfig, onSort }: TableHeaderProps<T>) {
+export function TableHeader<T>({ 
+  columns, 
+  sortConfig, 
+  onSort,
+  selectable = false,
+  isAllSelected = false,
+  isSomeSelected = false,
+  onSelectAll,
+}: TableHeaderProps<T>) {
   const getSortIcon = (columnId: string) => {
     const config = sortConfig.find(c => c.column === columnId);
     if (!config || !config.direction) return null;
@@ -22,6 +34,22 @@ export function TableHeader<T>({ columns, sortConfig, onSort }: TableHeaderProps
   return (
     <thead>
       <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
+        {selectable && (
+          <th className="px-3 py-2.5 w-12">
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              ref={(input) => {
+                if (input) {
+                  input.indeterminate = isSomeSelected;
+                }
+              }}
+              onChange={onSelectAll}
+              className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-florin-500 focus:ring-florin-500 focus:ring-offset-0"
+              title="Select all"
+            />
+          </th>
+        )}
         {columns.map((column) => {
           const sortIcon = getSortIcon(column.id);
           const sortIndex = getSortIndex(column.id);
