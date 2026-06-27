@@ -95,10 +95,12 @@
     "amount": "Amount",
     "original_label": "Original label",
     "no_notes": "No notes",
+    "add_notes": "Add notes...",
     "created_at": "Created at",
     "import_batch": "Import batch",
     "previous": "Previous",
     "next": "Next",
+    "reset": "Reset Changes",
     "unsaved_changes": "You have unsaved changes. Close anyway?"
   },
   "filters": {
