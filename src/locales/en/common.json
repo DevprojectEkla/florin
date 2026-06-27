@@ -90,6 +90,26 @@
     "unclassified":   "Unclassified",
     "pending_review": "Needs review"
   },
+  "filters": {
+    "filters": "Filters",
+    "active": "Active",
+    "clear_all": "Clear all",
+    "date_range": "Date range",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "min": "Min",
+    "max": "Max",
+    "categories": "Categories",
+    "clear_selection": "Clear selection",
+    "type": "Type",
+    "all": "All",
+    "expenses": "Expenses",
+    "income": "Income",
+    "status": "Status",
+    "classified": "Classified",
+    "unclassified": "Unclassified"
+  },
   "transactions": {
     "search": "Search…",
     "unclassified_only": "Unclassified"

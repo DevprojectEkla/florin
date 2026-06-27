@@ -1,51 +1,42 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
+import { useTransactionFilters } from '../hooks/useTransactionFilters';
 import { splitLabel } from '../lib/utils';
 import { DataTable } from '../components/table';
+import { FilterPanel } from '../components/filters';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
 export default function Transactions() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const filterUnclassified = searchParams.get('filter') === 'unclassified';
 
   const { selectedId: fyId } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
 
-  const { data: transactions = [], isLoading } = useTransactions(
-    fyId,
-    filterUnclassified ? { unclassifiedOnly: true } : undefined
-  );
+  const { data: transactions = [], isLoading } = useTransactions(fyId);
 
-  const [showFilter, setShowFilter] = useState(filterUnclassified);
-  const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig[]>([
     { column: 'date', direction: 'desc' } // Default: newest first
   ]);
 
   const updateCategory = useUpdateTransactionCategory();
+  
+  // New filter system
+  const {
+    filters,
+    setFilters,
+    clearFilters,
+    activeFilterCount,
+    applyFilters,
+  } = useTransactionFilters();
 
-  // Filter
+  // Apply filters
   const filtered = useMemo(() => {
-    let list = transactions;
-    if (showFilter) {
-      list = list.filter((tx) => !tx.category_id);
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (tx) =>
-          tx.label.toLowerCase().includes(q) ||
-          (tx.category_label ?? '').toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [transactions, showFilter, search]);
+    return applyFilters(transactions);
+  }, [transactions, applyFilters]);
 
   // Define table columns
   const columns: Column<TransactionWithCategory>[] = useMemo(() => [
@@ -141,28 +132,27 @@ export default function Transactions() {
 
   return (
     <div className="p-6 space-y-4">
-      {/* Header + controls */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-100">{t('nav.transactions')}</h1>
-        <div className="flex items-center gap-3">
-          <input
-            className="input w-60"
-            placeholder={t('transactions.search')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button
-            className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-              showFilter
-                ? 'bg-amber-500/15 text-amber-400'
-                : 'bg-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-            onClick={() => setShowFilter((v) => !v)}
-          >
-            {t('transactions.unclassified_only')} ({transactions.filter((t) => !t.category_id).length})
-          </button>
-        </div>
+        
+        {/* Search */}
+        <input
+          className="input w-60"
+          placeholder={t('transactions.search')}
+          value={filters.search || ''}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+        />
       </div>
+
+      {/* Filters */}
+      <FilterPanel
+        filters={filters}
+        categories={categories}
+        onFiltersChange={setFilters}
+        onClearFilters={clearFilters}
+        activeFilterCount={activeFilterCount}
+      />
 
       {/* Count */}
       <p className="text-xs text-slate-500">
