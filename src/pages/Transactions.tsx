@@ -13,6 +13,7 @@ import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
 import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
 import { TransactionDetailModal } from '../components/transactions/TransactionDetailModal';
+import { ExportMenu } from '../components/transactions/ExportMenu';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -20,7 +21,7 @@ export default function Transactions() {
   const { t } = useTranslation();
   const { theme } = useTheme();
 
-  const { selectedId: fyId } = useFiscalYear();
+  const { selectedId: fyId, selected: selectedFiscalYear } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
 
   const { data: transactions = [], isLoading } = useTransactions(fyId);
@@ -194,6 +195,13 @@ export default function Transactions() {
         <h1 className="text-2xl font-bold text-slate-100">{t('nav.transactions')}</h1>
         
         <div className="flex items-center gap-3">
+          {/* Export Menu */}
+          <ExportMenu
+            transactions={filtered}
+            selectedIds={selectedIds}
+            fiscalYearLabel={selectedFiscalYear?.label}
+          />
+
           {/* Column Visibility */}
           <ColumnVisibilityMenu
             columns={columns}
