@@ -8,6 +8,7 @@ import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { splitLabel } from '../lib/utils';
 import { DataTable, ColumnVisibilityMenu } from '../components/table';
 import { FilterPanel } from '../components/filters';
+import { StatsBar } from '../components/transactions/StatsBar';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -171,6 +172,9 @@ export default function Transactions() {
         onClearFilters={clearFilters}
         activeFilterCount={activeFilterCount}
       />
+
+      {/* Stats Bar */}
+      <StatsBar transactions={filtered} isLoading={isLoading} />
 
       {/* Count */}
       <p className="text-xs text-slate-500">

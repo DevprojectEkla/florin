@@ -121,6 +121,13 @@
     "reset_defaults": "Réinitialiser",
     "visible_count": "{{count}} sur {{total}} visibles"
   },
+  "stats": {
+    "total_transactions": "Total transactions",
+    "total_debit": "Total dépenses",
+    "total_credit": "Total revenus",
+    "net_balance": "Solde net",
+    "unclassified": "Non classées"
+  },
   "dashboard": {
     "no_data":            "Aucune donnée — importez un relevé bancaire pour commencer.",
     "total_transactions": "Transactions",

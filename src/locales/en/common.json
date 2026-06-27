@@ -121,6 +121,13 @@
     "reset_defaults": "Reset",
     "visible_count": "{{count}} of {{total}} visible"
   },
+  "stats": {
+    "total_transactions": "Total transactions",
+    "total_debit": "Total expenses",
+    "total_credit": "Total income",
+    "net_balance": "Net balance",
+    "unclassified": "Unclassified"
+  },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
     "total_transactions": "Transactions",
