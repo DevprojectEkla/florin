@@ -11,7 +11,7 @@ import { usePagination } from '../hooks/usePagination';
 import { splitLabel } from '../lib/utils';
 import { parseSearchQuery, applySearchQuery } from '../lib/searchParser';
 import { DataTable, VirtualDataTable, ColumnVisibilityMenu, PaginationControls } from '../components/table';
-import { FilterPanel } from '../components/filters';
+import { FilterPanel, PresetFilters } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
 import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
 import { TransactionDetailModal } from '../components/transactions/TransactionDetailModal';
@@ -301,6 +301,12 @@ export default function Transactions() {
           />
         </div>
       </div>
+
+      {/* Preset Filters */}
+      <PresetFilters
+        onApplyPreset={(preset) => setFilters({ ...filters, ...preset })}
+        currentFilters={filters}
+      />
 
       {/* Filters */}
       <FilterPanel

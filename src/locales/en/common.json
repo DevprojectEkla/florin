@@ -142,6 +142,20 @@
     "next_page": "Next page",
     "last_page": "Last page"
   },
+  "presets": {
+    "quick_filters": "Quick filters",
+    "unclassified": "Unclassified",
+    "this_month": "This month",
+    "last_30_days": "Last 30 days",
+    "large_expenses": "Large expenses (>500€)",
+    "income_only": "Income only",
+    "save": "Save",
+    "save_current": "Save current filters",
+    "save_preset": "Save quick filter",
+    "preset_name": "Filter name",
+    "preset_name_placeholder": "e.g. Monthly groceries",
+    "delete": "Delete"
+  },
   "stats": {
     "total_transactions": "Total transactions",
     "total_debit": "Total expenses",

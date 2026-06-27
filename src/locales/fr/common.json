@@ -142,6 +142,20 @@
     "next_page": "Page suivante",
     "last_page": "Dernière page"
   },
+  "presets": {
+    "quick_filters": "Filtres rapides",
+    "unclassified": "Non classées",
+    "this_month": "Ce mois-ci",
+    "last_30_days": "30 derniers jours",
+    "large_expenses": "Grosses dépenses (>500€)",
+    "income_only": "Revenus uniquement",
+    "save": "Sauvegarder",
+    "save_current": "Sauvegarder les filtres actuels",
+    "save_preset": "Sauvegarder un filtre rapide",
+    "preset_name": "Nom du filtre",
+    "preset_name_placeholder": "ex: Courses du mois",
+    "delete": "Supprimer"
+  },
   "stats": {
     "total_transactions": "Total transactions",
     "total_debit": "Total dépenses",
