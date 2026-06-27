@@ -21,6 +21,119 @@
   -webkit-text-size-adjust: 100%;
 }
 
+/* Light mode overrides */
+.light {
+  --tw-bg-opacity: 1;
+}
+
+.light body,
+.light #root {
+  background-color: rgb(248 250 252); /* slate-50 */
+}
+
+.light .bg-slate-900 {
+  background-color: rgb(248 250 252) !important; /* slate-50 */
+}
+
+.light .bg-slate-800 {
+  background-color: rgb(255 255 255) !important; /* white */
+}
+
+.light .bg-slate-800\/30 {
+  background-color: rgb(241 245 249 / 0.5) !important; /* slate-100/50 */
+}
+
+.light .bg-slate-700 {
+  background-color: rgb(241 245 249) !important; /* slate-100 */
+}
+
+.light .border-slate-700 {
+  border-color: rgb(226 232 240) !important; /* slate-200 */
+}
+
+.light .border-slate-600 {
+  border-color: rgb(203 213 225) !important; /* slate-300 */
+}
+
+.light .border-slate-700\/50 {
+  border-color: rgb(226 232 240 / 0.5) !important;
+}
+
+.light .text-slate-100 {
+  color: rgb(15 23 42) !important; /* slate-900 */
+}
+
+.light .text-slate-200 {
+  color: rgb(30 41 59) !important; /* slate-800 */
+}
+
+.light .text-slate-300 {
+  color: rgb(51 65 85) !important; /* slate-700 */
+}
+
+.light .text-slate-400 {
+  color: rgb(100 116 139) !important; /* slate-500 */
+}
+
+.light .text-slate-500 {
+  color: rgb(100 116 139) !important; /* slate-500 */
+}
+
+.light .text-slate-600 {
+  color: rgb(71 85 105) !important; /* slate-600 */
+}
+
+.light .hover\:bg-slate-700\/30:hover {
+  background-color: rgb(241 245 249 / 0.3) !important;
+}
+
+.light .hover\:bg-slate-800:hover {
+  background-color: rgb(248 250 252) !important;
+}
+
+.light .hover\:text-slate-100:hover {
+  color: rgb(15 23 42) !important;
+}
+
+.light .hover\:text-slate-200:hover {
+  color: rgb(30 41 59) !important;
+}
+
+/* Card backgrounds */
+.light .card {
+  background-color: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+
+/* Input fields */
+.light .input {
+  background-color: rgb(255 255 255);
+  border-color: rgb(203 213 225);
+  color: rgb(15 23 42);
+}
+
+.light .input::placeholder {
+  color: rgb(148 163 184);
+}
+
+/* Modals */
+.light [role="dialog"] {
+  background-color: rgb(255 255 255);
+}
+
+/* Dropdowns */
+.light select option {
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+}
+
+/* Keep accent colors the same */
+.light .text-florin-400,
+.light .bg-florin-500\/10,
+.light .border-florin-500\/30 {
+  /* These stay the same in light mode for brand consistency */
+}
+
 .container {
   margin: 0;
   padding-top: 10vh;

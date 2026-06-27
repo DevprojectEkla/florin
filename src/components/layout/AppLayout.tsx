@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../../store/FiscalYearContext';
+import { useTheme } from '../../store/ThemeContext';
 
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: '◉',  key: 'nav.dashboard'    },
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { allFiscalYears, selectedId, setSelectedId } = useFiscalYear();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -64,9 +66,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        {/* Version */}
-        <div className="px-5 py-3 border-t border-slate-700">
+        {/* Version + Theme Toggle */}
+        <div className="px-3 py-3 border-t border-slate-700 flex items-center justify-between">
           <span className="text-slate-600 text-xs">v0.1.0</span>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-200"
+            title={theme === 'dark' ? t('theme.switch_to_light') : t('theme.switch_to_dark')}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </div>
       </aside>
 

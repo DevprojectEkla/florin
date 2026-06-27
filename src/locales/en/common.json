@@ -258,6 +258,10 @@
   "fiscal_year": {
     "all_years": "All years"
   },
+  "theme": {
+    "switch_to_light": "Switch to light mode",
+    "switch_to_dark": "Switch to dark mode"
+  },
   "onboarding": {
     "title":               "Initial setup",
     "subtitle":            "Let's configure your space in a few seconds",
