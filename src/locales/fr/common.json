@@ -163,6 +163,12 @@
     "net_balance": "Solde net",
     "unclassified": "Non classées"
   },
+  "charts": {
+    "by_category": "Par catégorie",
+    "top_expenses": "Top 5 dépenses",
+    "timeline": "Évolution (30j)",
+    "transactions": "Transactions"
+  },
   "selection": {
     "count": "{{count}} transaction(s) sélectionnée(s)",
     "clear": "Effacer la sélection",
