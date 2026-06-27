@@ -78,18 +78,33 @@ export function BulkActionsToolbar({
   const isLoading = bulkUpdateCategory.isPending || bulkDelete.isPending;
 
   // Always render with content to prevent layout shift
+  // Use relative positioning and absolute children to overlay content perfectly
   return (
     <>
       <div 
-        className={`rounded-lg px-4 py-3 transition-all duration-200 min-h-[3.5rem] ${
+        className={`relative rounded-lg px-4 py-3 transition-all duration-200 h-14 overflow-hidden ${
           selectedCount > 0
             ? 'bg-florin-500/10 border border-florin-500/30'
             : 'bg-slate-800/30 border border-slate-700/50'
         }`}
       >
-        {selectedCount > 0 ? (
-          <>
-            <div className="flex items-center justify-between">
+        {/* Default content - always rendered but hidden when selection active */}
+        <div className={`absolute inset-0 px-4 py-3 flex items-center justify-between text-slate-400 text-sm transition-opacity duration-200 ${
+          selectedCount > 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}>
+          <span>
+            💡 {t('bulk.hint')}
+          </span>
+          <span className="text-xs">
+            {t('bulk.shortcut')}
+          </span>
+        </div>
+
+        {/* Selection content - always rendered but hidden when no selection */}
+        <div className={`absolute inset-0 px-4 py-3 transition-opacity duration-200 ${
+          selectedCount > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}>
+          <div className="flex items-center justify-between h-full">
           {/* Selection Count */}
           <span className="text-sm font-medium text-florin-300">
             {t('selection.count', { count: selectedCount })}
@@ -132,25 +147,7 @@ export function BulkActionsToolbar({
             </button>
           </div>
         </div>
-
-        {/* Loading Indicator */}
-        {isLoading && (
-          <div className="mt-2 text-xs text-slate-400">
-            {t('bulk.processing')}...
-          </div>
-        )}
-          </>
-        ) : (
-          // Default content when nothing selected
-          <div className="flex items-center justify-between text-slate-400 text-sm">
-            <span>
-              💡 {t('bulk.hint')}
-            </span>
-            <span className="text-xs">
-              {t('bulk.shortcut')}
-            </span>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
