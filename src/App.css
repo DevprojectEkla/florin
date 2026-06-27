@@ -547,3 +547,13 @@ button {
     background-color: #0f0f0f69;
   }
 }
+
+
+/* Pagination button styles */
+.pagination-btn {
+  @apply px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600 rounded hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-700/50 transition-colors;
+}
+
+.light .pagination-btn {
+  @apply text-slate-700 bg-white border-slate-300 hover:bg-slate-50 disabled:hover:bg-white;
+}
