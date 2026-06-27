@@ -121,8 +121,21 @@
   background-color: rgb(255 255 255);
 }
 
-/* Dropdowns */
+/* Dropdowns and option elements */
 .light select option {
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+}
+
+.light select option:checked,
+.light select option:hover {
+  background-color: rgb(241 245 249) !important;
+  color: rgb(15 23 42) !important;
+}
+
+/* Specific override for option pseudo-selector syntax */
+.light [class*="[&>option]"] option,
+.light select[class*="[&>option]"] option {
   background-color: rgb(255 255 255) !important;
   color: rgb(15 23 42) !important;
 }
@@ -267,6 +280,149 @@
 
 .light .divide-slate-700\/50 > * + * {
   border-color: rgb(226 232 240 / 0.5) !important;
+}
+
+/* ===== DASHBOARD SPECIFIC COMPONENTS ===== */
+
+/* Bank Balance Card (Sold à la banque) */
+.light .from-slate-800 {
+  --tw-gradient-from: rgb(255 255 255) !important;
+  --tw-gradient-to: rgb(255 255 255 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.light .to-slate-800\/80 {
+  --tw-gradient-to: rgb(248 250 252) !important;
+}
+
+/* Investments/Savings Card (green Épargne card) */
+.light .from-emerald-900\/20 {
+  --tw-gradient-from: rgb(209 250 229 / 0.5) !important; /* emerald-100 */
+  --tw-gradient-to: rgb(209 250 229 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.light .to-emerald-800\/10 {
+  --tw-gradient-to: rgb(236 253 245 / 0.3) !important; /* emerald-50 */
+}
+
+.light .border-emerald-700\/30 {
+  border-color: rgb(16 185 129 / 0.3) !important; /* emerald-500 */
+}
+
+.light .text-emerald-400\/70 {
+  color: rgb(5 150 105) !important; /* emerald-600 */
+}
+
+.light .text-emerald-400 {
+  color: rgb(5 150 105) !important; /* emerald-600 */
+}
+
+.light .bg-emerald-900\/20 {
+  background-color: rgb(209 250 229 / 0.5) !important; /* emerald-100 */
+}
+
+.light .text-emerald-600\/70 {
+  color: rgb(5 150 105 / 0.8) !important; /* emerald-600 */
+}
+
+.light .border-emerald-600\/30 {
+  border-color: rgb(5 150 105 / 0.3) !important;
+}
+
+.light .border-emerald-600\/50 {
+  border-color: rgb(5 150 105 / 0.5) !important;
+}
+
+/* Capital Investments Card - similar treatment */
+.light .from-purple-900\/20 {
+  --tw-gradient-from: rgb(243 232 255 / 0.5) !important; /* purple-100 */
+}
+
+.light .to-purple-800\/10 {
+  --tw-gradient-to: rgb(250 245 255 / 0.3) !important; /* purple-50 */
+}
+
+.light .border-purple-700\/30 {
+  border-color: rgb(168 85 247 / 0.3) !important; /* purple-500 */
+}
+
+.light .text-purple-400 {
+  color: rgb(147 51 234) !important; /* purple-600 */
+}
+
+.light .bg-purple-900\/20 {
+  background-color: rgb(243 232 255 / 0.5) !important; /* purple-100 */
+}
+
+.light .text-purple-600\/70 {
+  color: rgb(147 51 234 / 0.8) !important;
+}
+
+.light .border-purple-600\/30 {
+  border-color: rgb(147 51 234 / 0.3) !important;
+}
+
+.light .border-purple-600\/50 {
+  border-color: rgb(147 51 234 / 0.5) !important;
+}
+
+/* Drill-down rows and expandable sections backgrounds */
+.light .bg-slate-800\/40 {
+  background-color: rgb(255 255 255 / 0.9) !important;
+}
+
+.light .hover\:bg-slate-800\/60:hover {
+  background-color: rgb(248 250 252) !important;
+}
+
+.light .bg-slate-700\/60 {
+  background-color: rgb(241 245 249) !important; /* slate-100 */
+}
+
+.light .hover\:bg-slate-700\/50:hover {
+  background-color: rgb(241 245 249 / 0.7) !important;
+}
+
+.light .border-slate-700\/50 {
+  border-color: rgb(226 232 240 / 0.7) !important; /* slate-200 */
+}
+
+/* Text colors in drill-down */
+.light .text-slate-600 {
+  color: rgb(100 116 139) !important; /* slate-500 */
+}
+
+/* Category badges in drill-down */
+.light .bg-slate-700\/50 {
+  background-color: rgb(226 232 240 / 0.8) !important; /* slate-200 */
+}
+
+/* Settings page sections */
+.light .border-r.border-slate-700 {
+  border-color: rgb(226 232 240) !important;
+}
+
+.light .hover\:bg-slate-800:hover {
+  background-color: rgb(248 250 252) !important;
+}
+
+.light .bg-slate-850,
+.light .bg-slate-800 {
+  background-color: rgb(255 255 255) !important;
+}
+
+.light .divide-slate-700\/50 > * + * {
+  border-color: rgb(226 232 240 / 0.7) !important;
+}
+
+/* Language section buttons */
+.light .border-slate-600 {
+  border-color: rgb(203 213 225) !important;
+}
+
+.light .hover\:border-slate-500:hover {
+  border-color: rgb(148 163 184) !important;
 }
 
 .container {
