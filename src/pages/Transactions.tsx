@@ -10,7 +10,7 @@ import { splitLabel } from '../lib/utils';
 import { DataTable, ColumnVisibilityMenu } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
-import { SelectionToolbar } from '../components/transactions/SelectionToolbar';
+import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -202,8 +202,13 @@ export default function Transactions() {
       {/* Stats Bar */}
       <StatsBar transactions={filtered} isLoading={isLoading} />
 
-      {/* Selection Toolbar */}
-      <SelectionToolbar selectedCount={selectedCount} onClearSelection={clearSelection} />
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedIds={Array.from(selectedIds)}
+        selectedCount={selectedCount}
+        categories={categories}
+        onClearSelection={clearSelection}
+      />
 
       {/* Count */}
       <p className="text-xs text-slate-500">
