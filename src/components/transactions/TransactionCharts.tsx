@@ -91,7 +91,7 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-8 text-center text-slate-500 dark:text-slate-500 light:bg-white light:border-slate-200 light:text-slate-600">
+      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-8 text-center text-slate-500">
         {t('common.empty')}
       </div>
     );
@@ -100,8 +100,8 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* 1. Category Distribution (Pie Chart) */}
-      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-4 light:bg-white light:border-slate-200">
-        <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-3 light:text-slate-700">
+      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-4">
+        <h3 className="text-sm font-medium text-slate-300 mb-3">
           📊 {t('charts.by_category')}
         </h3>
         <ResponsiveContainer width="100%" height={200}>
@@ -130,17 +130,17 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: cat.color }}
                 />
-                <span className="text-slate-400 dark:text-slate-400 truncate light:text-slate-600">{cat.name}</span>
+                <span className="text-slate-400 truncate">{cat.name}</span>
               </div>
-              <span className="text-slate-300 dark:text-slate-300 font-mono light:text-slate-900">{cat.value.toFixed(0)}€</span>
+              <span className="text-slate-300 font-mono">{cat.value.toFixed(0)}€</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 2. Top 5 Expenses (Bar Chart) */}
-      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-4 light:bg-white light:border-slate-200">
-        <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-3 light:text-slate-700">
+      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-4">
+        <h3 className="text-sm font-medium text-slate-300 mb-3">
           💰 {t('charts.top_expenses')}
         </h3>
         <ResponsiveContainer width="100%" height={200}>
@@ -158,16 +158,16 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
         <div className="mt-2 space-y-1 text-xs">
           {chartData.topExpenses.map((exp, idx) => (
             <div key={idx} className="flex items-center justify-between">
-              <span className="text-slate-400 dark:text-slate-400 truncate flex-1 light:text-slate-600">{exp.name}</span>
-              <span className="text-red-400 dark:text-red-400 font-mono ml-2 light:text-red-600">{exp.amount.toFixed(0)}€</span>
+              <span className="text-slate-400 truncate flex-1">{exp.name}</span>
+              <span className="text-red-400 font-mono ml-2">{exp.amount.toFixed(0)}€</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 3. Timeline (Line Chart) */}
-      <div className="bg-slate-800/40 dark:bg-slate-800/40 rounded-lg border border-slate-700/50 dark:border-slate-700/50 p-4 light:bg-white light:border-slate-200">
-        <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-3 light:text-slate-700">
+      <div className="bg-slate-800/40 rounded-lg border border-slate-700/50 p-4">
+        <h3 className="text-sm font-medium text-slate-300 mb-3">
           📈 {t('charts.timeline')}
         </h3>
         <ResponsiveContainer width="100%" height={200}>
@@ -206,11 +206,11 @@ export default function TransactionCharts({ transactions }: TransactionChartsPro
         <div className="mt-2 flex items-center justify-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-red-500" />
-            <span className="text-slate-400 dark:text-slate-400 light:text-slate-600">{t('transaction.debit')}</span>
+            <span className="text-slate-400">{t('transaction.debit')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-emerald-500" />
-            <span className="text-slate-400 dark:text-slate-400 light:text-slate-600">{t('transaction.credit')}</span>
+            <span className="text-slate-400">{t('transaction.credit')}</span>
           </div>
         </div>
       </div>
