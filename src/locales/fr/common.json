@@ -37,6 +37,26 @@
       "capital":  "Investissements Capital"
     }
   },
+  "filters": {
+    "filters": "Filtres",
+    "active": "Actifs",
+    "clear_all": "Tout effacer",
+    "date_range": "Période",
+    "from": "Du",
+    "to": "Au",
+    "amount": "Montant",
+    "min": "Min",
+    "max": "Max",
+    "categories": "Catégories",
+    "clear_selection": "Effacer la sélection",
+    "type": "Type",
+    "all": "Tous",
+    "expenses": "Dépenses",
+    "income": "Revenus",
+    "status": "Statut",
+    "classified": "Classifiées",
+    "unclassified": "Non classifiées"
+  },
   "categories": {
     "page_title":    "Catégories",
     "page_subtitle": "Gérez vos catégories de dépenses et de revenus",
