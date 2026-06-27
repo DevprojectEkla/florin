@@ -90,6 +90,11 @@ export async function updateTransactionCategory(
   );
 }
 
+export async function deleteTransaction(id: number): Promise<void> {
+  const db = await getDb();
+  await db.execute('DELETE FROM transactions WHERE id = ?', [id]);
+}
+
 // ─── Monthly aggregations ────────────────────────────────────────────────────
 
 export interface MonthlyAggregate {

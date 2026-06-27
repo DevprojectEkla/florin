@@ -133,6 +133,15 @@
     "clear": "Effacer la sélection",
     "select_all": "Tout sélectionner"
   },
+  "bulk": {
+    "assign_category": "Assigner une catégorie...",
+    "delete": "Supprimer",
+    "processing": "Traitement en cours",
+    "error": "Une erreur s'est produite pendant l'opération",
+    "partial_failure": "{{succeeded}} réussies, {{failed}} échouées",
+    "delete_confirm_title": "Supprimer les transactions ?",
+    "delete_confirm_message": "Êtes-vous sûr de vouloir supprimer {{count}} transaction(s) ? Cette action est irréversible."
+  },
   "dashboard": {
     "no_data":            "Aucune donnée — importez un relevé bancaire pour commencer.",
     "total_transactions": "Transactions",

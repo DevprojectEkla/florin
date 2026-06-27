@@ -133,6 +133,15 @@
     "clear": "Clear selection",
     "select_all": "Select all"
   },
+  "bulk": {
+    "assign_category": "Assign category...",
+    "delete": "Delete",
+    "processing": "Processing",
+    "error": "An error occurred during the operation",
+    "partial_failure": "{{succeeded}} succeeded, {{failed}} failed",
+    "delete_confirm_title": "Delete transactions?",
+    "delete_confirm_message": "Are you sure you want to delete {{count}} transaction(s)? This action cannot be undone."
+  },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
     "total_transactions": "Transactions",
