@@ -77,7 +77,7 @@ export function parseSearchQuery(query: string): SearchQuery {
     remaining = remaining.replace(match[0], ' ');
   }
 
-  // Comparisons: >100, <50, >=100, <=50
+  // Comparisons: >100, <50, >=100, <=50 (must have number after operator)
   const compRegex = /(>=|<=|>|<)(\d+(?:\.\d+)?)/g;
   while ((match = compRegex.exec(remaining)) !== null) {
     const op = match[1];
@@ -106,6 +106,12 @@ export function parseSearchQuery(query: string): SearchQuery {
       continue;
     }
 
+    // Ignore incomplete operators (just - or > without content)
+    if (token === '-' || token === '>' || token === '<' || token === '>=' || token === '<=') {
+      i++;
+      continue;
+    }
+
     // Check for OR group
     if (i + 2 < tokens.length && tokens[i + 1]?.toUpperCase() === 'OR') {
       const orGroup = [token.toLowerCase()];
@@ -125,15 +131,15 @@ export function parseSearchQuery(query: string): SearchQuery {
       continue;
     }
 
-    // Check for exclude
+    // Check for exclude (must have content after -)
     if (token.startsWith('-') && token.length > 1) {
       result.excludeWords.push(token.substring(1).toLowerCase());
       i++;
       continue;
     }
 
-    // Regular include word
-    if (token) {
+    // Regular include word (ignore standalone operators)
+    if (token && !token.match(/^[<>=]+$/)) {
       result.includeWords.push(token.toLowerCase());
     }
     i++;
