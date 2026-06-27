@@ -752,15 +752,23 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
   if (investmentsList.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-emerald-900/20 to-emerald-800/10 rounded-xl border border-emerald-700/30 px-5 py-4">
+    <div className={`bg-gradient-to-r rounded-xl border px-5 py-4 ${
+      totalInvestments < 0
+        ? 'from-red-900/20 to-red-800/10 border-red-700/30'
+        : 'from-emerald-900/20 to-emerald-800/10 border-emerald-700/30'
+    }`}>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <span className="text-xs text-emerald-400/70 uppercase tracking-wider">
+          <span className={`text-xs uppercase tracking-wider ${
+            totalInvestments < 0 ? 'text-red-400/70' : 'text-emerald-400/70'
+          }`}>
             {showYearTotal 
               ? t('dashboard.investments_summary_year') 
               : t('dashboard.investments_summary_month')}
           </span>
-          <div className="text-2xl font-bold mt-0.5 text-emerald-400">
+          <div className={`text-2xl font-bold mt-0.5 ${
+            totalInvestments < 0 ? 'text-red-400' : 'text-emerald-400'
+          }`}>
             {totalInvestments.toFixed(2)} €
           </div>
         </div>
