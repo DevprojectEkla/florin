@@ -107,11 +107,42 @@ export default function Dashboard() {
   }
   
   function nextMonth() {
-    if (viewMonth === 12) { 
-      setViewMonth(1); 
-      setViewYear(viewYear + 1); 
+    // Don't allow going after fiscal year end
+    if (fiscalYear) {
+      // Fiscal year ends 11 months after start month
+      // e.g., Sept 2025 (start_month=9, start_year=2025) -> Aug 2026 (month=8, year=2026)
+      let fyEndMonth = fiscalYear.start_month - 1;
+      let fyEndYear = fiscalYear.start_year + 1;
+      if (fyEndMonth < 1) {
+        fyEndMonth = 12;
+        fyEndYear--;
+      }
+      
+      const fyEndDate = new Date(fyEndYear, fyEndMonth - 1);
+      
+      // Calculate new month
+      let newMonth = viewMonth + 1;
+      let newYear = viewYear;
+      if (newMonth > 12) {
+        newMonth = 1;
+        newYear++;
+      }
+      
+      const newDate = new Date(newYear, newMonth - 1);
+      
+      // Only allow if new date is <= fiscal year end
+      if (newDate <= fyEndDate) {
+        setViewMonth(newMonth);
+        setViewYear(newYear);
+      }
     } else {
-      setViewMonth(viewMonth + 1);
+      // No fiscal year selected (all years mode) - allow any navigation
+      if (viewMonth === 12) { 
+        setViewMonth(1); 
+        setViewYear(viewYear + 1); 
+      } else {
+        setViewMonth(viewMonth + 1);
+      }
     }
   }
 
