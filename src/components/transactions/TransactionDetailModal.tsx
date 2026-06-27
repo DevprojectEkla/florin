@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUpdateTransactionCategory } from '../../hooks/useTransactions';
 import { useActiveCategories } from '../../hooks/useCategories';
+import { updateTransactionNotes, updateTransactionLabelClean } from '../../db/transactions';
 import Modal from '../ui/Modal';
 import { splitLabel } from '../../lib/utils';
 import type { TransactionWithCategory } from '../../db/transactions';
@@ -24,16 +26,38 @@ export function TransactionDetailModal({
   canNavigateNext = false,
 }: TransactionDetailModalProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { data: categories = [] } = useActiveCategories();
   const updateCategory = useUpdateTransactionCategory();
+  
+  const updateNotes = useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes: string | null }) => 
+      updateTransactionNotes(id, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
+
+  const updateLabel = useMutation({
+    mutationFn: ({ id, labelClean }: { id: number; labelClean: string | null }) => 
+      updateTransactionLabelClean(id, labelClean),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
 
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [labelClean, setLabelClean] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
 
   // Reset state when transaction changes
   useEffect(() => {
     if (transaction) {
+      const { detail } = splitLabel(transaction.label_clean ?? transaction.label);
       setCategoryId(transaction.category_id);
+      setLabelClean(detail);
+      setNotes(transaction.notes ?? '');
       setHasChanges(false);
     }
   }, [transaction]);
@@ -81,18 +105,55 @@ export function TransactionDetailModal({
     if (!transaction || !hasChanges) return;
 
     try {
+      const promises = [];
+
       if (categoryId !== transaction.category_id) {
-        await updateCategory.mutateAsync({
-          id: transaction.id,
-          categoryId,
-        });
+        promises.push(
+          updateCategory.mutateAsync({
+            id: transaction.id,
+            categoryId,
+          })
+        );
       }
+
+      const originalDetail = splitLabel(transaction.label_clean ?? transaction.label).detail;
+      if (labelClean !== originalDetail) {
+        // Reconstruct full label_clean with type prefix if it exists
+        const { type } = splitLabel(transaction.label_clean ?? transaction.label);
+        const newLabelClean = type ? `${type} ${labelClean}` : labelClean;
+        promises.push(
+          updateLabel.mutateAsync({
+            id: transaction.id,
+            labelClean: newLabelClean,
+          })
+        );
+      }
+
+      if (notes !== (transaction.notes ?? '')) {
+        promises.push(
+          updateNotes.mutateAsync({
+            id: transaction.id,
+            notes: notes.trim() || null,
+          })
+        );
+      }
+
+      await Promise.all(promises);
       setHasChanges(false);
       onClose();
     } catch (error) {
       console.error('Failed to save transaction:', error);
       alert(t('common.error'));
     }
+  };
+
+  const handleReset = () => {
+    if (!transaction) return;
+    const { detail } = splitLabel(transaction.label_clean ?? transaction.label);
+    setCategoryId(transaction.category_id);
+    setLabelClean(detail);
+    setNotes(transaction.notes ?? '');
+    setHasChanges(false);
   };
 
   const handleCategoryChange = (newCategoryId: string) => {
@@ -103,7 +164,7 @@ export function TransactionDetailModal({
 
   if (!transaction) return null;
 
-  const { type, detail } = splitLabel(transaction.label_clean ?? transaction.label);
+  const { type } = splitLabel(transaction.label_clean ?? transaction.label);
   const amount = transaction.debit || transaction.credit || 0;
   const isDebit = !!transaction.debit;
 
@@ -168,9 +229,16 @@ export function TransactionDetailModal({
           <label className="block text-sm font-medium text-slate-300 mb-2">
             {t('transaction.label')}
           </label>
-          <div className="input bg-slate-800 cursor-not-allowed opacity-70">
-            {detail}
-          </div>
+          <input
+            type="text"
+            className="input w-full"
+            value={labelClean}
+            onChange={(e) => {
+              setLabelClean(e.target.value);
+              setHasChanges(true);
+            }}
+            placeholder={t('transaction.label')}
+          />
         </div>
 
         {/* Original Label */}
@@ -202,14 +270,20 @@ export function TransactionDetailModal({
           </select>
         </div>
 
-        {/* Notes - TODO: Make editable */}
+        {/* Notes */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
             {t('transaction.notes')}
           </label>
-          <div className="input bg-slate-800 min-h-[80px] text-slate-400">
-            {transaction.notes || t('transaction_detail.no_notes')}
-          </div>
+          <textarea
+            className="input w-full min-h-[80px] resize-y"
+            value={notes}
+            onChange={(e) => {
+              setNotes(e.target.value);
+              setHasChanges(true);
+            }}
+            placeholder={t('transaction_detail.add_notes')}
+          />
         </div>
 
         {/* Metadata */}
@@ -227,17 +301,29 @@ export function TransactionDetailModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-700">
-          <button className="btn-ghost" onClick={handleClose}>
-            {t('common.cancel')}
-          </button>
+        <div className="flex items-center justify-between pt-4 border-t border-slate-700">
           <button
-            className="btn-primary"
-            onClick={handleSave}
-            disabled={!hasChanges || updateCategory.isPending}
+            className="btn-ghost text-amber-400 hover:text-amber-300"
+            onClick={handleReset}
+            disabled={!hasChanges}
           >
-            {updateCategory.isPending ? t('common.loading') : t('common.save')}
+            🔄 {t('transaction_detail.reset')}
           </button>
+          
+          <div className="flex items-center gap-3">
+            <button className="btn-ghost" onClick={handleClose}>
+              {t('common.cancel')}
+            </button>
+            <button
+              className="btn-primary"
+              onClick={handleSave}
+              disabled={!hasChanges || updateCategory.isPending || updateNotes.isPending || updateLabel.isPending}
+            >
+              {(updateCategory.isPending || updateNotes.isPending || updateLabel.isPending)
+                ? t('common.loading')
+                : t('common.save')}
+            </button>
+          </div>
         </div>
       </div>
     </Modal>

@@ -90,6 +90,28 @@ export async function updateTransactionCategory(
   );
 }
 
+export async function updateTransactionNotes(
+  id: number,
+  notes: string | null
+): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    'UPDATE transactions SET notes = ? WHERE id = ?',
+    [notes, id]
+  );
+}
+
+export async function updateTransactionLabelClean(
+  id: number,
+  labelClean: string | null
+): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    'UPDATE transactions SET label_clean = ? WHERE id = ?',
+    [labelClean, id]
+  );
+}
+
 export async function deleteTransaction(id: number): Promise<void> {
   const db = await getDb();
   await db.execute('DELETE FROM transactions WHERE id = ?', [id]);
