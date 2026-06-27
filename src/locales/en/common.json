@@ -140,7 +140,9 @@
     "error": "An error occurred during the operation",
     "partial_failure": "{{succeeded}} succeeded, {{failed}} failed",
     "delete_confirm_title": "Delete transactions?",
-    "delete_confirm_message": "Are you sure you want to delete {{count}} transaction(s)? This action cannot be undone."
+    "delete_confirm_message": "Are you sure you want to delete {{count}} transaction(s)? This action cannot be undone.",
+    "hint": "Select transactions to perform bulk actions",
+    "shortcut": "Ctrl/Cmd+A to select all"
   },
   "dashboard": {
     "no_data":            "No data — import a bank statement to get started.",
