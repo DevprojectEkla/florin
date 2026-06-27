@@ -17,6 +17,7 @@ import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolba
 import { TransactionDetailModal } from '../components/transactions/TransactionDetailModal';
 import { ExportMenu } from '../components/transactions/ExportMenu';
 import { AdvancedSearchInput } from '../components/transactions/AdvancedSearchInput';
+import TransactionCharts from '../components/transactions/TransactionCharts';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -319,6 +320,9 @@ export default function Transactions() {
 
       {/* Stats Bar */}
       <StatsBar transactions={filtered} isLoading={isLoading} />
+
+      {/* Visual Statistics Charts */}
+      {filtered.length > 0 && <TransactionCharts transactions={filtered} />}
 
       {/* Bulk Actions Toolbar */}
       <BulkActionsToolbar

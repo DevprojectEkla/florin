@@ -163,6 +163,12 @@
     "net_balance": "Net balance",
     "unclassified": "Unclassified"
   },
+  "charts": {
+    "by_category": "By category",
+    "top_expenses": "Top 5 expenses",
+    "timeline": "Timeline (30d)",
+    "transactions": "Transactions"
+  },
   "selection": {
     "count": "{{count}} transaction(s) selected",
     "clear": "Clear selection",
