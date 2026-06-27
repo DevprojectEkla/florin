@@ -136,7 +136,7 @@ function CategoriesSection() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="text-xs transition-colors"
+            className="text-xs transition-colors hover:underline"
             style={{ color: 'var(--text-secondary, #94a3b8)' }}
             onClick={() => setShowArchived((v) => !v)}
           >

@@ -156,7 +156,8 @@ export default function Investments() {
                   <td className="px-3 py-2 text-right font-mono text-slate-200">{pos.amount.toFixed(0)} €</td>
                   <td className="px-3 py-2 text-center">
                     <button
-                      className="text-slate-500 hover:text-red-400 transition-colors p-1 inline-flex items-center justify-center text-base"
+                      className="transition-colors p-1 inline-flex items-center justify-center text-base hover:text-red-400"
+                      style={{ color: 'var(--text-secondary, #94a3b8)' }}
                       onClick={() => setDeleteTarget(pos.id)}
                       title={t('common.delete')}
                     >
