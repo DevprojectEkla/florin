@@ -134,6 +134,7 @@ export default function Investments() {
                 <th className="px-3 py-2.5 text-left">{t('portfolio.sector')}</th>
                 <th className="px-3 py-2.5 text-left w-24">{t('portfolio.risk')}</th>
                 <th className="px-3 py-2.5 text-right w-24">{t('portfolio.amount')}</th>
+                <th className="px-3 py-2.5 text-center w-16"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
@@ -153,16 +154,16 @@ export default function Investments() {
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-slate-200">{pos.amount.toFixed(0)} €</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 text-center">
                     <button
-                      className="text-slate-500 hover:text-red-400 transition-colors p-1"
+                      className="text-slate-500 hover:text-red-400 transition-colors p-1 inline-flex items-center justify-center"
                       onClick={() => setDeleteTarget(pos.id)}
                       title={t('common.delete')}
                     >
                       <svg 
                         xmlns="http://www.w3.org/2000/svg" 
-                        width="14" 
-                        height="14" 
+                        width="16" 
+                        height="16" 
                         viewBox="0 0 24 24" 
                         fill="none" 
                         stroke="currentColor" 
