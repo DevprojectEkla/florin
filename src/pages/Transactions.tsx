@@ -59,7 +59,6 @@ export default function Transactions() {
     setFilters,
     clearFilters,
     activeFilterCount,
-    applyFilters,
   } = useTransactionFilters();
 
   // Column visibility
@@ -71,16 +70,48 @@ export default function Transactions() {
 
   // Apply filters
   const filtered = useMemo(() => {
-    let result = applyFilters(transactions);
+    // First apply all filters EXCEPT search (we'll handle search separately with advanced parser)
+    const filtersWithoutSearch = { ...filters, search: undefined };
+    const tempFilters = { ...filters };
+    (tempFilters as any).search = undefined; // Temporarily remove search
     
-    // Apply advanced search if present
+    // Apply non-search filters
+    const result = transactions.filter(tx => {
+      // Date range
+      if (filtersWithoutSearch.dateFrom && tx.date < filtersWithoutSearch.dateFrom) return false;
+      if (filtersWithoutSearch.dateTo && tx.date > filtersWithoutSearch.dateTo) return false;
+
+      // Amount range
+      const amount = tx.debit || tx.credit || 0;
+      if (filtersWithoutSearch.minAmount !== undefined && amount < filtersWithoutSearch.minAmount) return false;
+      if (filtersWithoutSearch.maxAmount !== undefined && amount > filtersWithoutSearch.maxAmount) return false;
+
+      // Categories (OR logic)
+      if (filtersWithoutSearch.categories && filtersWithoutSearch.categories.length > 0) {
+        if (!tx.category_id || !filtersWithoutSearch.categories.includes(tx.category_id)) {
+          return false;
+        }
+      }
+
+      // Type
+      if (filtersWithoutSearch.type === 'debit' && !tx.debit) return false;
+      if (filtersWithoutSearch.type === 'credit' && !tx.credit) return false;
+
+      // Status
+      if (filtersWithoutSearch.status === 'classified' && !tx.category_id) return false;
+      if (filtersWithoutSearch.status === 'unclassified' && tx.category_id) return false;
+
+      return true;
+    });
+    
+    // Then apply advanced search on the filtered results
     if (filters.search) {
       const searchQuery = parseSearchQuery(filters.search);
-      result = applySearchQuery(result, searchQuery);
+      return applySearchQuery(result, searchQuery);
     }
     
     return result;
-  }, [transactions, applyFilters, filters.search]);
+  }, [transactions, filters]);
 
   // Apply pagination if in paginated mode
   const displayData = viewMode === 'paginated' 
