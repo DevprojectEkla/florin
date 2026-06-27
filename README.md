@@ -49,11 +49,23 @@ Download `Florin_0.1.0_x64_en-US.msi` from the [releases page](https://github.co
 
 ### macOS
 
-Download `Florin_0.1.0_x64.dmg` from the [releases page](https://github.com/DevprojectEkla/florin/releases), open it, and drag Florin to your Applications folder.
+Download `Florin_0.1.0_universal.dmg` from the [releases page](https://github.com/DevprojectEkla/florin/releases), open it, and drag Florin to your Applications folder.
+
+### Android
+
+Download `florin-v0.1.0-android.apk` from the [releases page](https://github.com/DevprojectEkla/florin/releases) and install it on your Android device.
+
+**Installation Steps:**
+1. Enable "Install from Unknown Sources" in your Android device settings
+2. Download the APK file to your device
+3. Open the APK file and tap "Install"
+4. Launch Florin from your app drawer
+
+**Requirements:** Android 7.0 (API 24) or higher
 
 ## 🚀 Quick Start
 
-1. **Launch Florin** - Open the application from your applications menu
+1. **Launch Florin** - Open the application from your applications menu (or app drawer on Android)
 2. **Set Password** - Create a password to protect your data (default dev password: `testtest`)
 3. **Create Account** - Add your bank account information
 4. **Import Transactions** - Import your first bank statement (Excel format from Crédit Agricole)
@@ -89,6 +101,26 @@ npm run tauri dev
 npm run tauri build
 
 # Outputs will be in src-tauri/target/release/bundle/
+```
+
+### Building for Android
+
+```bash
+# Prerequisites
+# - Android SDK installed
+# - Android NDK installed  
+# - Java Development Kit (JDK) 17 or higher
+
+# Add Android Rust targets (one-time setup)
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+# Initialize Android project (one-time setup)
+npm run tauri android init
+
+# Build APK
+npm run tauri android build
+
+# Output: src-tauri/gen/android/app/build/outputs/apk/
 ```
 
 ## 🏗️ Tech Stack
@@ -133,6 +165,7 @@ Your data is stored in:
 - **Linux**: `~/.config/com.devprojectekla.florin/florin.db`
 - **Windows**: `%APPDATA%\com.devprojectekla.florin\florin.db`
 - **macOS**: `~/Library/Application Support/com.devprojectekla.florin/florin.db`
+- **Android**: `/data/data/com.devprojectekla.florin/databases/florin.db` (internal storage)
 
 ## 🌐 Supported Languages
 
