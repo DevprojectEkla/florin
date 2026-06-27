@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../store/FiscalYearContext';
+import { useTheme } from '../store/ThemeContext';
 import { useTransactions, useUpdateTransactionCategory } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
 import { useTransactionFilters } from '../hooks/useTransactionFilters';
@@ -17,6 +18,7 @@ import type { TransactionWithCategory } from '../db/transactions';
 
 export default function Transactions() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   const { selectedId: fyId } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
@@ -149,10 +151,14 @@ export default function Transactions() {
       sortable: false, // Category edit dropdown, no sort
       render: (_, tx) => (
         <select
-          className={`w-full bg-transparent border rounded-md px-2 py-1 text-xs transition-colors cursor-pointer ${
+          className={`w-full border rounded-md px-2 py-1 text-xs transition-colors cursor-pointer ${
             tx.category_id
-              ? 'border-slate-600 text-slate-200'
-              : 'border-amber-500/50 text-amber-400'
+              ? (theme === 'light' 
+                  ? 'bg-white border-slate-300 text-slate-900' 
+                  : 'bg-transparent border-slate-600 text-slate-200')
+              : (theme === 'light'
+                  ? 'bg-white border-amber-500/50 text-amber-600'
+                  : 'bg-transparent border-amber-500/50 text-amber-400')
           }`}
           value={tx.category_id ?? ''}
           onChange={(e) => {
@@ -171,7 +177,7 @@ export default function Transactions() {
         </select>
       ),
     },
-  ], [t, categories, updateCategory]);
+  ], [t, categories, updateCategory, theme]);
 
   if (!fyId) {
     return (

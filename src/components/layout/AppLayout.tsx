@@ -31,18 +31,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         {/* Fiscal Year Selector */}
         <div className="px-3 py-3 border-b border-slate-700">
           <select
-            className="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-sm
-                       text-slate-200 focus:outline-none focus:ring-1 focus:ring-florin-400
-                       [&>option]:bg-slate-800 [&>option]:text-slate-200"
+            className={`w-full border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-florin-400`}
+            style={
+              theme === 'light'
+                ? { backgroundColor: '#ffffff', color: '#0f172a', borderColor: '#cbd5e1' }
+                : { backgroundColor: '#1e293b', color: '#e2e8f0', borderColor: '#475569' }
+            }
             value={selectedId ?? 'all'}
             onChange={(e) => {
               const val = e.target.value;
               setSelectedId(val === 'all' ? null : parseInt(val));
             }}
           >
-            <option value="all" className="bg-slate-800 text-slate-200">{t('fiscal_year.all_years')}</option>
+            <option value="all">{t('fiscal_year.all_years')}</option>
             {allFiscalYears.map((fy) => (
-              <option key={fy.id} value={fy.id} className="bg-slate-800 text-slate-200">{fy.label}</option>
+              <option key={fy.id} value={fy.id}>{fy.label}</option>
             ))}
           </select>
         </div>
