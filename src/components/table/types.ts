@@ -20,6 +20,7 @@ export interface Column<T = any> {
 export interface DataTableProps<T = any> {
   data: T[];
   columns: Column<T>[];
+  visibleColumns?: Set<string>;
   sortConfig?: SortConfig[];
   onSortChange?: (config: SortConfig[]) => void;
   isLoading?: boolean;
