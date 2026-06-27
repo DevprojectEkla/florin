@@ -149,6 +149,7 @@ export async function getMonthlyAggregates(fiscalYearId: number | null): Promise
 export interface CategoryAggregate {
   category_id: number | null;
   category_label: string | null;
+  category_slug: string | null;
   category_color: string | null;
   category_icon: string | null;
   category_type: string | null;
@@ -180,6 +181,7 @@ export async function getCategoryAggregates(
     `SELECT
        t.category_id,
        c.label as category_label,
+       c.slug as category_slug,
        c.color as category_color,
        c.icon as category_icon,
        c.type as category_type,

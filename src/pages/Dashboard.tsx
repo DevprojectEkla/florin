@@ -76,8 +76,9 @@ export default function Dashboard() {
     .sort((a, b) => b.total - a.total);
 
   // Month income (negative total = credit > debit)
+  // Exclude transfer.internal as it's not real income, just LEP → checking account movement
   const monthIncome = monthCategories
-    .filter((c) => c.total < 0)
+    .filter((c) => c.total < 0 && c.category_slug !== 'transfer.internal')
     .sort((a, b) => a.total - b.total);
 
   function prevMonth() {
@@ -647,10 +648,17 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
 
   if (!transactions || transactions.length === 0) return null;
 
-  // Calculate investments by savings category (NET: credit - debit)
-  // For LEP and other savings, we want: deposits (credit) - withdrawals (debit)
-  const investments = transactions
-    .filter(tx => tx.category_type === 'savings')
+  // Calculate investments by savings category
+  // For savings: debit = money going INTO savings (e.g., transfer to LEP)
+  // For LEP specifically, we need to subtract "transfer.internal" credits (withdrawals from LEP back to checking)
+  const savingsTransactions = transactions.filter(tx => tx.category_type === 'savings');
+  
+  // Calculate total internal transfer credits (withdrawals from savings accounts)
+  const internalTransferCredits = transactions
+    .filter(tx => tx.category_slug === 'transfer.internal' && tx.credit && tx.credit > 0)
+    .reduce((sum, tx) => sum + (tx.credit || 0), 0);
+
+  const investments = savingsTransactions
     .reduce((acc, tx) => {
       const key = tx.category_slug || 'unknown';
       if (!acc[key]) {
@@ -662,13 +670,18 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
           transactions: [],
         };
       }
-      // Net savings = credit (deposits) - debit (withdrawals)
-      const netAmount = (tx.credit || 0) - (tx.debit || 0);
-      acc[key].total += netAmount;
+      // For savings: debit = deposits (positive contribution)
+      acc[key].total += (tx.debit || 0);
       acc[key].count += 1;
       acc[key].transactions.push(tx);
       return acc;
     }, {} as Record<string, { label: string; icon: string; total: number; count: number; transactions: TransactionWithCategory[] }>);
+
+  // For LEP savings: subtract internal transfers (withdrawals)
+  // This gives us net savings = deposits - withdrawals
+  if (investments['savings.lep']) {
+    investments['savings.lep'].total -= internalTransferCredits;
+  }
 
   const investmentsList = Object.entries(investments)
     .sort((a, b) => b[1].total - a[1].total);
@@ -709,7 +722,10 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
                     <div className="flex-1">
                       <div className="text-sm text-slate-300 font-medium">{inv.label}</div>
                       <div className="text-xs text-slate-500">
-                        {inv.count} {inv.count === 1 ? 'opération' : 'opérations'}
+                        {inv.count} {inv.count === 1 ? 'versement' : 'versements'}
+                        {slug === 'savings.lep' && internalTransferCredits > 0 && 
+                          ` (net après ${internalTransferCredits.toFixed(0)}€ retraits)`
+                        }
                       </div>
                     </div>
                   </div>
