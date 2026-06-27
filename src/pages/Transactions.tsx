@@ -102,7 +102,7 @@ export default function Transactions() {
       label: t('transaction.label'),
       accessor: (tx) => splitLabel(tx.label_clean ?? tx.label).detail,
       render: (value, tx) => (
-        <span className="text-slate-200 truncate max-w-xs block" title={tx.label}>
+        <span className="text-slate-200 truncate block" title={tx.label}>
           {value}
         </span>
       ),

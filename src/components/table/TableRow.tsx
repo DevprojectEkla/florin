@@ -26,7 +26,7 @@ export function TableRow<T>({
 
   return (
     <tr
-      className={`transition-colors ${
+      className={`transition-all duration-150 ${
         isSelected ? 'bg-florin-500/10' : 'hover:bg-slate-700/30'
       } ${onClick ? 'cursor-pointer' : ''}`}
       onClick={() => onClick?.(row)}
@@ -41,7 +41,7 @@ export function TableRow<T>({
               onSelectItem?.();
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-florin-500 focus:ring-florin-500 focus:ring-offset-0"
+            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-florin-500 focus:ring-2 focus:ring-florin-500 focus:ring-offset-0 transition-all duration-150 cursor-pointer hover:border-florin-400 hover:scale-110"
           />
         </td>
       )}
