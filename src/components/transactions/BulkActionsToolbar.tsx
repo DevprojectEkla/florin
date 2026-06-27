@@ -77,17 +77,17 @@ export function BulkActionsToolbar({
 
   const isLoading = bulkUpdateCategory.isPending || bulkDelete.isPending;
 
-  // Always render with fixed min height to prevent layout shift
+  // Always render with content to prevent layout shift
   return (
     <>
       <div 
         className={`rounded-lg px-4 py-3 transition-all duration-200 min-h-[3.5rem] ${
           selectedCount > 0
-            ? 'bg-florin-500/10 border border-florin-500/30 opacity-100'
-            : 'border border-transparent opacity-0 pointer-events-none'
+            ? 'bg-florin-500/10 border border-florin-500/30'
+            : 'bg-slate-800/30 border border-slate-700/50'
         }`}
       >
-        {selectedCount > 0 && (
+        {selectedCount > 0 ? (
           <>
             <div className="flex items-center justify-between">
           {/* Selection Count */}
@@ -140,6 +140,16 @@ export function BulkActionsToolbar({
           </div>
         )}
           </>
+        ) : (
+          // Default content when nothing selected
+          <div className="flex items-center justify-between text-slate-400 text-sm">
+            <span>
+              💡 {t('bulk.hint')}
+            </span>
+            <span className="text-xs">
+              {t('bulk.shortcut')}
+            </span>
+          </div>
         )}
       </div>
 
