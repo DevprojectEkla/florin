@@ -11,6 +11,7 @@ import { DataTable, ColumnVisibilityMenu } from '../components/table';
 import { FilterPanel } from '../components/filters';
 import { StatsBar } from '../components/transactions/StatsBar';
 import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolbar';
+import { TransactionDetailModal } from '../components/transactions/TransactionDetailModal';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -48,6 +49,20 @@ export default function Transactions() {
   const filtered = useMemo(() => {
     return applyFilters(transactions);
   }, [transactions, applyFilters]);
+
+  // Detail modal
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithCategory | null>(null);
+  const selectedIndex = selectedTransaction 
+    ? filtered.findIndex(tx => tx.id === selectedTransaction.id)
+    : -1;
+
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (selectedIndex === -1) return;
+    const newIndex = direction === 'prev' ? selectedIndex - 1 : selectedIndex + 1;
+    if (newIndex >= 0 && newIndex < filtered.length) {
+      setSelectedTransaction(filtered[newIndex]);
+    }
+  };
 
   // Selection
   const {
@@ -226,12 +241,23 @@ export default function Transactions() {
         isLoading={isLoading}
         emptyMessage={t('common.empty')}
         rowKey="id"
+        onRowClick={(row) => setSelectedTransaction(row)}
         selectable
         selectedIds={selectedIds}
         onSelectItem={toggleItem}
         onSelectAll={isAllSelected ? clearSelection : selectAll}
         isAllSelected={isAllSelected}
         isSomeSelected={isSomeSelected}
+      />
+
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        open={!!selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        onNavigate={handleNavigate}
+        canNavigatePrev={selectedIndex > 0}
+        canNavigateNext={selectedIndex < filtered.length - 1}
       />
     </div>
   );
