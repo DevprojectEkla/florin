@@ -134,6 +134,141 @@
   /* These stay the same in light mode for brand consistency */
 }
 
+/* Additional specific overrides for components */
+
+/* Select dropdowns (fiscal year selector, category selects, etc) */
+.light select {
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+  border-color: rgb(203 213 225) !important;
+}
+
+.light select:focus {
+  border-color: rgb(148 163 184) !important;
+}
+
+/* Cards with specific backgrounds */
+.light .bg-slate-800\/50 {
+  background-color: rgb(255 255 255 / 0.8) !important;
+}
+
+.light .bg-slate-700\/50 {
+  background-color: rgb(241 245 249 / 0.5) !important;
+}
+
+.light .bg-slate-700\/30 {
+  background-color: rgb(241 245 249 / 0.3) !important;
+}
+
+/* Dashboard cards and panels */
+.light .bg-green-500\/10 {
+  background-color: rgb(34 197 94 / 0.15) !important;
+}
+
+.light .bg-blue-500\/10 {
+  background-color: rgb(59 130 246 / 0.15) !important;
+}
+
+.light .bg-purple-500\/10 {
+  background-color: rgb(168 85 247 / 0.15) !important;
+}
+
+.light .bg-amber-500\/10 {
+  background-color: rgb(245 158 11 / 0.15) !important;
+}
+
+/* Drill-down rows and expandable sections */
+.light .bg-slate-800\/80 {
+  background-color: rgb(248 250 252) !important;
+}
+
+.light .bg-slate-900\/50 {
+  background-color: rgb(241 245 249) !important;
+}
+
+/* Table rows and list items */
+.light tr:hover {
+  background-color: rgb(248 250 252) !important;
+}
+
+/* Settings page sections */
+.light .bg-slate-850 {
+  background-color: rgb(255 255 255) !important;
+}
+
+/* Buttons with slate backgrounds */
+.light .btn-secondary,
+.light .bg-slate-700.hover\:bg-slate-600 {
+  background-color: rgb(248 250 252) !important;
+  border-color: rgb(203 213 225) !important;
+  color: rgb(15 23 42) !important;
+}
+
+.light .btn-secondary:hover {
+  background-color: rgb(241 245 249) !important;
+}
+
+.light .btn-ghost {
+  color: rgb(71 85 105) !important;
+}
+
+.light .btn-ghost:hover {
+  color: rgb(15 23 42) !important;
+  background-color: rgb(241 245 249) !important;
+}
+
+/* Category badges and tags */
+.light .bg-slate-700\/50 {
+  background-color: rgb(241 245 249) !important;
+}
+
+/* Scrollbars in light mode */
+.light ::-webkit-scrollbar-track {
+  background-color: rgb(248 250 252);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background-color: rgb(203 213 225);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(148 163 184);
+}
+
+/* Disabled states */
+.light .disabled\:opacity-50:disabled,
+.light [disabled] {
+  opacity: 0.5;
+}
+
+/* Placeholders and empty states */
+.light .text-slate-400::placeholder {
+  color: rgb(148 163 184) !important;
+}
+
+/* Border colors for various states */
+.light .border-slate-500 {
+  border-color: rgb(148 163 184) !important;
+}
+
+.light .border-slate-800 {
+  border-color: rgb(226 232 240) !important;
+}
+
+/* Ring colors for focus states */
+.light .focus\:ring-slate-500:focus {
+  --tw-ring-color: rgb(148 163 184);
+}
+
+/* Divide colors */
+.light .divide-slate-700 > * + * {
+  border-color: rgb(226 232 240) !important;
+}
+
+.light .divide-slate-700\/50 > * + * {
+  border-color: rgb(226 232 240 / 0.5) !important;
+}
+
 .container {
   margin: 0;
   padding-top: 10vh;
