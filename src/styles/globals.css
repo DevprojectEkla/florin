@@ -24,19 +24,11 @@
   }
 
   * {
-    @apply border-slate-700 dark:border-slate-700;
-  }
-
-  .light * {
-    @apply border-slate-200;
+    @apply border-slate-700;
   }
 
   body {
-    @apply bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 font-sans antialiased;
-  }
-
-  .light body {
-    @apply bg-white text-slate-900;
+    @apply bg-slate-900 text-slate-100 font-sans antialiased;
   }
 
   /* Prevent text selection on UI chrome */
@@ -83,10 +75,6 @@
   .card {
     @apply bg-slate-800 rounded-xl border border-slate-700 p-4;
   }
-  
-  .light .card {
-    @apply bg-white border-slate-200;
-  }
 
   .btn-primary {
     @apply bg-florin-500 hover:bg-florin-400 text-slate-900 font-semibold
@@ -97,19 +85,11 @@
     @apply bg-transparent hover:bg-slate-700 text-slate-300
            px-4 py-2 rounded-lg transition-colors duration-150;
   }
-  
-  .light .btn-ghost {
-    @apply hover:bg-slate-100 text-slate-700;
-  }
 
   .input {
     @apply bg-slate-700 border border-slate-600 rounded-lg px-3 py-2
            text-slate-100 placeholder-slate-400 focus:outline-none
            focus:ring-2 focus:ring-florin-500 focus:border-transparent w-full;
-  }
-  
-  .light .input {
-    @apply bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-500;
   }
 
   .badge {
@@ -119,8 +99,4 @@
   .amount-debit  { @apply text-red-400 font-mono; }
   .amount-credit { @apply text-green-400 font-mono; }
   .amount-zero   { @apply text-slate-400 font-mono; }
-  
-  .light .amount-debit  { @apply text-red-600; }
-  .light .amount-credit { @apply text-green-600; }
-  .light .amount-zero   { @apply text-slate-600; }
 }
