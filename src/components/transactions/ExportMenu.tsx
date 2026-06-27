@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import type { TransactionWithCategory } from '../../db/transactions';
@@ -31,11 +33,10 @@ export function ExportMenu({ transactions, selectedIds, fiscalYearLabel }: Expor
       if (scope === 'selected' && selectedIds && selectedIds.size > 0) {
         dataToExport = transactions.filter(tx => selectedIds.has(tx.id));
       }
-      // 'current' uses filtered transactions already
-      // 'all' would need all transactions - for now treat as 'current'
 
       if (dataToExport.length === 0) {
         alert(t('export.no_data'));
+        setIsExporting(false);
         return;
       }
 
@@ -51,19 +52,22 @@ export function ExportMenu({ transactions, selectedIds, fiscalYearLabel }: Expor
         'Notes': tx.notes ?? '',
       }));
 
-      // Generate filename
+      // Generate default filename
       const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       const fyPart = fiscalYearLabel ? `-${fiscalYearLabel.replace(/[^a-zA-Z0-9]/g, '')}` : '';
       const scopePart = scope === 'selected' ? `-selection` : '';
-      const filename = `florin-transactions${fyPart}${scopePart}-${timestamp}`;
+      const defaultFilename = `florin-transactions${fyPart}${scopePart}-${timestamp}`;
 
-      // Export based on format
+      let content: string | Uint8Array;
+      let filters: Array<{ name: string; extensions: string[] }>;
+
+      // Generate content based on format
       if (format === 'csv') {
-        const csv = Papa.unparse(exportData, {
+        content = Papa.unparse(exportData, {
           quotes: true,
           delimiter: ',',
         });
-        downloadFile(csv, `${filename}.csv`, 'text/csv');
+        filters = [{ name: 'CSV', extensions: ['csv'] }];
       } else if (format === 'excel') {
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
@@ -80,12 +84,40 @@ export function ExportMenu({ transactions, selectedIds, fiscalYearLabel }: Expor
         });
         worksheet['!cols'] = colWidths;
 
-        XLSX.writeFile(workbook, `${filename}.xlsx`);
+        // Write to binary array
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        content = new Uint8Array(excelBuffer);
+        filters = [{ name: 'Excel', extensions: ['xlsx'] }];
       } else if (format === 'json') {
-        const json = JSON.stringify(exportData, null, 2);
-        downloadFile(json, `${filename}.json`, 'application/json');
+        content = JSON.stringify(exportData, null, 2);
+        filters = [{ name: 'JSON', extensions: ['json'] }];
+      } else {
+        throw new Error('Unknown format');
       }
 
+      // Show save dialog
+      const filePath = await save({
+        defaultPath: `${defaultFilename}.${format === 'excel' ? 'xlsx' : format}`,
+        filters,
+      });
+
+      if (!filePath) {
+        // User cancelled
+        setIsExporting(false);
+        return;
+      }
+
+      // Save file
+      if (typeof content === 'string') {
+        await writeTextFile(filePath, content);
+      } else {
+        // For binary files (Excel), we need to use the fs plugin differently
+        const { writeFile } = await import('@tauri-apps/plugin-fs');
+        await writeFile(filePath, content);
+      }
+
+      // Success feedback
+      alert(t('export.success'));
       setShowModal(false);
       setIsOpen(false);
     } catch (error) {
@@ -94,18 +126,6 @@ export function ExportMenu({ transactions, selectedIds, fiscalYearLabel }: Expor
     } finally {
       setIsExporting(false);
     }
-  };
-
-  const downloadFile = (content: string, filename: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   return (
