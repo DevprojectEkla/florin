@@ -121,22 +121,15 @@
   background-color: rgb(255 255 255);
 }
 
-/* Dropdowns and option elements */
-.light select option {
+/* Dropdowns and option elements - for main content area only */
+.light main select option {
   background-color: rgb(255 255 255) !important;
   color: rgb(15 23 42) !important;
 }
 
-.light select option:checked,
-.light select option:hover {
+.light main select option:checked,
+.light main select option:hover {
   background-color: rgb(241 245 249) !important;
-  color: rgb(15 23 42) !important;
-}
-
-/* Specific override for option pseudo-selector syntax */
-.light [class*="[&>option]"] option,
-.light select[class*="[&>option]"] option {
-  background-color: rgb(255 255 255) !important;
   color: rgb(15 23 42) !important;
 }
 
@@ -149,15 +142,35 @@
 
 /* Additional specific overrides for components */
 
-/* Select dropdowns (fiscal year selector, category selects, etc) */
-.light select {
+/* Select dropdowns in main content area only */
+.light main select {
   background-color: rgb(255 255 255) !important;
   color: rgb(15 23 42) !important;
   border-color: rgb(203 213 225) !important;
 }
 
-.light select:focus {
+.light main select:focus {
   border-color: rgb(148 163 184) !important;
+  background-color: rgb(255 255 255) !important;
+}
+
+.light main select option {
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+}
+
+/* Transaction table category dropdowns - more specific */
+.light table select,
+.light [role="table"] select {
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+  border-color: rgb(203 213 225) !important;
+}
+
+.light table select option,
+.light [role="table"] select option {
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
 }
 
 /* Cards with specific backgrounds */
@@ -283,6 +296,22 @@
 }
 
 /* ===== DASHBOARD SPECIFIC COMPONENTS ===== */
+
+/* Monthly overview rows in year view */
+.light .space-y-1\.5 > button,
+.light .space-y-1 > div > button {
+  background-color: rgb(255 255 255) !important;
+}
+
+.light .space-y-1\.5 > button:hover,
+.light .space-y-1 > div > button:hover {
+  background-color: rgb(248 250 252) !important;
+}
+
+/* Selected month row */
+.light .bg-florin-500\/10 {
+  background-color: rgb(134 239 172 / 0.15) !important; /* Keep florin accent visible */
+}
 
 /* Bank Balance Card (Sold à la banque) */
 .light .from-slate-800 {
