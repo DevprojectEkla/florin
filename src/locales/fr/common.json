@@ -297,6 +297,8 @@
     "sector":          "Secteur",
     "risk":            "Risque",
     "amount":          "Montant",
-    "empty":           "Aucun investissement — ajoutez un véhicule pour commencer"
+    "empty":           "Aucun investissement — ajoutez un véhicule pour commencer",
+    "delete_position_title": "Supprimer cette position ?",
+    "delete_position_message": "Cette position sera définitivement supprimée."
   }
 }
