@@ -101,6 +101,17 @@ export async function updateTransactionNotes(
   );
 }
 
+export async function updateTransactionAttributedMonth(
+  id: number,
+  attributedMonth: string | null
+): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    'UPDATE transactions SET attributed_month = ? WHERE id = ?',
+    [attributedMonth, id]
+  );
+}
+
 export async function updateTransactionLabelClean(
   id: number,
   labelClean: string | null
@@ -117,6 +128,61 @@ export async function deleteTransaction(id: number): Promise<void> {
   await db.execute('DELETE FROM transactions WHERE id = ?', [id]);
 }
 
+export interface ManualTransactionInput {
+  accountId: number;
+  fiscalYearId: number;
+  date: string;
+  label: string;         // original label (stored in `label` column)
+  txTypeLabel?: string | null;  // e.g. "CB", "VIR" (prepended to label_clean)
+  debit: number | null;
+  credit: number | null;
+  categoryId: number | null;
+  notes?: string | null;
+}
+
+export async function insertManualTransaction(input: ManualTransactionInput): Promise<void> {
+  const db = await getDb();
+  // Build a dedup hash that won't collide with imported ones
+  // Prefix "manual:" makes it inherently distinct from CA-imported hashes
+  const amount = input.debit ?? input.credit ?? 0;
+  const baseHash = `manual:${input.date}|${input.label.trim()}|${amount.toFixed(2)}`;
+
+  // Handle same-day same-amount manual entries (same logic as import)
+  const existing = await db.select<{ dedup_hash: string }[]>(
+    `SELECT dedup_hash FROM transactions WHERE dedup_hash LIKE ? ORDER BY id`,
+    [`${baseHash}%`]
+  );
+  const occurrence = existing.length + 1;
+  const hash = occurrence > 1 ? `${baseHash}#${occurrence}` : baseHash;
+
+  // label_clean uses the 3-space gap format that splitLabel's gapMatch recognises:
+  // "TYPE   detail" → splitLabel returns { type: "TYPE", detail: "detail" }
+  // If no txTypeLabel is provided, label_clean is null (UI falls back to label column).
+  const labelClean = input.txTypeLabel?.trim()
+    ? `${input.txTypeLabel.trim().toUpperCase()}   ${input.label.trim()}`
+    : null;
+
+  await db.execute(
+    `INSERT INTO transactions
+      (account_id, fiscal_year_id, import_batch_id, date, label, label_clean,
+       debit, credit, category_id, is_reviewed, notes, dedup_hash)
+     VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      input.accountId,
+      input.fiscalYearId,
+      input.date,
+      input.label.trim(),
+      labelClean,
+      input.debit,
+      input.credit,
+      input.categoryId,
+      0,
+      input.notes ?? null,
+      hash,
+    ]
+  );
+}
+
 // ─── Monthly aggregations ────────────────────────────────────────────────────
 
 export interface MonthlyAggregate {
@@ -131,10 +197,23 @@ export async function getMonthlyAggregates(fiscalYearId: number | null): Promise
   const db = await getDb();
   const where = fiscalYearId !== null ? 'WHERE fiscal_year_id = ?' : '';
   const params = fiscalYearId !== null ? [fiscalYearId] : [];
+
+  // For income transactions with an attributed_month override, use that month
+  // instead of the transaction date. Debits always use the real date.
   return db.select<MonthlyAggregate[]>(
     `SELECT
-       CAST(strftime('%Y', date) AS INTEGER) as year,
-       CAST(strftime('%m', date) AS INTEGER) as month,
+       CAST(
+         CASE WHEN credit IS NOT NULL AND attributed_month IS NOT NULL
+           THEN substr(attributed_month, 1, 4)
+           ELSE strftime('%Y', date)
+         END
+       AS INTEGER) as year,
+       CAST(
+         CASE WHEN credit IS NOT NULL AND attributed_month IS NOT NULL
+           THEN substr(attributed_month, 6, 2)
+           ELSE strftime('%m', date)
+         END
+       AS INTEGER) as month,
        COALESCE(SUM(debit), 0) as total_debit,
        COALESCE(SUM(credit), 0) as total_credit,
        COALESCE(SUM(credit), 0) - COALESCE(SUM(debit), 0) as net
@@ -171,10 +250,18 @@ export async function getCategoryAggregates(
   }
 
   if (month && year) {
-    conditions.push("CAST(strftime('%m', t.date) AS INTEGER) = ?");
-    conditions.push("CAST(strftime('%Y', t.date) AS INTEGER) = ?");
-    params.push(month);
-    params.push(year);
+    // For credits with attributed_month tag, match on that month.
+    // For everything else (debits + untagged credits), use the real date.
+    conditions.push(`(
+      (t.credit IS NOT NULL AND t.attributed_month IS NOT NULL
+        AND CAST(substr(t.attributed_month, 6, 2) AS INTEGER) = ?
+        AND CAST(substr(t.attributed_month, 1, 4) AS INTEGER) = ?)
+      OR
+      (NOT (t.credit IS NOT NULL AND t.attributed_month IS NOT NULL)
+        AND CAST(strftime('%m', t.date) AS INTEGER) = ?
+        AND CAST(strftime('%Y', t.date) AS INTEGER) = ?)
+    )`);
+    params.push(month, year, month, year);
   }
 
   return db.select<CategoryAggregate[]>(

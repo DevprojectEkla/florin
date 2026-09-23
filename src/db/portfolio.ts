@@ -188,3 +188,82 @@ export async function getVehicleSummaries(fiscalYearId: number): Promise<Vehicle
     };
   });
 }
+
+// ─── All-years aggregates (fyId = null) ──────────────────────────────────────
+
+export interface AllYearsVehicleSummary {
+  name: string;
+  totalCash: number;       // sum of cash_balance across all fiscal years
+  totalPositions: number;  // sum of position amounts across all fiscal years
+  total: number;
+  percentage: number;
+}
+
+export async function getAllYearsVehicleSummaries(): Promise<AllYearsVehicleSummary[]> {
+  const db = await getDb();
+
+  // Aggregate cash_balance by vehicle name across all fiscal years
+  const cashRows = await db.select<{ name: string; total_cash: number }[]>(
+    `SELECT name, SUM(cash_balance) as total_cash
+     FROM portfolio_vehicles
+     GROUP BY name
+     ORDER BY name`
+  );
+
+  // Aggregate position amounts by vehicle name across all fiscal years
+  const posRows = await db.select<{ name: string; total_positions: number }[]>(
+    `SELECT v.name, SUM(p.amount) as total_positions
+     FROM portfolio_positions p
+     JOIN portfolio_vehicles v ON v.id = p.vehicle_id
+     GROUP BY v.name`
+  );
+
+  const posMap = new Map(posRows.map((r) => [r.name, r.total_positions]));
+
+  const rows = cashRows.map((r) => ({
+    name: r.name,
+    totalCash: r.total_cash,
+    totalPositions: posMap.get(r.name) ?? 0,
+    total: r.total_cash + (posMap.get(r.name) ?? 0),
+    percentage: 0, // computed below
+  }));
+
+  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
+  rows.forEach((r) => { r.percentage = grandTotal > 0 ? (r.total / grandTotal) * 100 : 0; });
+
+  return rows.sort((a, b) => b.total - a.total);
+}
+
+export async function getAllYearsRiskBreakdown(): Promise<RiskBreakdown[]> {
+  const db = await getDb();
+  const positions = await db.select<{ risk_level: string | null; amount: number }[]>(
+    `SELECT p.risk_level, p.amount FROM portfolio_positions p`
+  );
+  const grandTotal = positions.reduce((s, p) => s + p.amount, 0);
+  if (grandTotal === 0) return [];
+
+  const byRisk: Record<string, number> = {};
+  for (const p of positions) {
+    const level = p.risk_level ?? 'non classé';
+    byRisk[level] = (byRisk[level] ?? 0) + p.amount;
+  }
+
+  return Object.entries(byRisk)
+    .map(([risk_level, total]) => ({
+      risk_level,
+      total,
+      percentage: (total / grandTotal) * 100,
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+export async function getAllYearsPositions(): Promise<(Position & { vehicle_name: string; fiscal_year_label: string })[]> {
+  const db = await getDb();
+  return db.select<(Position & { vehicle_name: string; fiscal_year_label: string })[]>(
+    `SELECT p.*, v.name as vehicle_name, fy.label as fiscal_year_label
+     FROM portfolio_positions p
+     JOIN portfolio_vehicles v ON v.id = p.vehicle_id
+     JOIN fiscal_years fy ON fy.id = v.fiscal_year_id
+     ORDER BY p.amount DESC`
+  );
+}

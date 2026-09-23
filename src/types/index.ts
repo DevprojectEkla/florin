@@ -49,6 +49,7 @@ export interface Transaction {
   notes: string | null;
   is_reviewed: boolean;
   dedup_hash: string;
+  attributed_month: string | null; // YYYY-MM override for budget income attribution
   created_at: string;
   // joined
   category?: Category;
@@ -85,6 +86,8 @@ export interface BudgetLine {
   fiscal_year_id: number;
   category_id: number;
   monthly_amount: number;
+  min_amount: number | null;
+  max_amount: number | null;
   category?: Category;
 }
 

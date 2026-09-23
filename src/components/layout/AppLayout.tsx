@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../../store/FiscalYearContext';
+import { useViewMonth } from '../../store/MonthContext';
 import { useTheme } from '../../store/ThemeContext';
 
 const NAV_ITEMS = [
@@ -15,8 +16,36 @@ const NAV_ITEMS = [
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { allFiscalYears, selectedId, setSelectedId } = useFiscalYear();
+  const { allFiscalYears, selected: fiscalYear, selectedId, setSelectedId } = useFiscalYear();
+  const { viewYear, viewMonth, setViewMonth } = useViewMonth();
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
+
+  // Pages that show month-level data and benefit from the month selector
+  const monthAwareRoutes = ['/dashboard', '/budget', '/transactions'];
+  const showMonthSelector = monthAwareRoutes.some(r => location.pathname.startsWith(r))
+    && selectedId !== null; // hide in "all years" mode
+
+  // Build month options for the selected fiscal year (or current year if none)
+  const monthOptions: { year: number; month: number }[] = [];
+  if (fiscalYear) {
+    for (let i = 0; i < 13; i++) { // up to 13 months to handle overflow
+      let m = fiscalYear.start_month + i;
+      let y = fiscalYear.start_year;
+      if (m > 12) { m -= 12; y++; }
+      monthOptions.push({ year: y, month: m });
+      // Stop once we've covered a full year
+      if (i >= 11) break;
+    }
+  } else {
+    // Fallback: current calendar year
+    const now = new Date();
+    for (let m = 1; m <= 12; m++) {
+      monthOptions.push({ year: now.getFullYear(), month: m });
+    }
+  }
+
+
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -49,6 +78,31 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             ))}
           </select>
         </div>
+
+        {/* Month Selector — visible on dashboard, budget, transactions */}
+        {showMonthSelector && (
+          <div className="px-3 py-2.5 border-b border-slate-700">
+            <select
+              className="w-full border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-florin-400"
+              style={
+                theme === 'light'
+                  ? { backgroundColor: '#ffffff', color: '#0f172a', borderColor: '#cbd5e1' }
+                  : { backgroundColor: '#1e293b', color: '#e2e8f0', borderColor: '#475569' }
+              }
+              value={`${viewYear}-${String(viewMonth).padStart(2, '0')}`}
+              onChange={(e) => {
+                const [y, m] = e.target.value.split('-').map(Number);
+                setViewMonth(y, m);
+              }}
+            >
+              {monthOptions.map(({ year, month }) => (
+                <option key={`${year}-${month}`} value={`${year}-${String(month).padStart(2, '0')}`}>
+                  {t(`months.${month}`)} {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
