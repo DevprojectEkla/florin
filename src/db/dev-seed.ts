@@ -5,7 +5,7 @@
  * Default password: testtest
  */
 import { invoke } from '@tauri-apps/api/core';
-import { getPasswordHash, setPasswordHash } from './auth';
+import { setPasswordHash } from './auth';
 import { getFirstAccount, createAccount, createFiscalYear, getFiscalYears } from './accounts';
 import { getDb } from './client';
 import { dedupKey } from '../lib/utils';
@@ -17,46 +17,54 @@ interface SeedStructure {
 }
 
 export async function devSeedAuth(): Promise<void> {
-  // Seed password
-  const existing = await getPasswordHash();
-  if (!existing) {
+  try {
+    // Seed password - always reset to testtest in dev mode
+    if (import.meta.env.DEV) console.log('[dev-seed] Starting password setup...');
     const hash = await invoke<string>('hash_password', { password: 'testtest' });
     await setPasswordHash(hash);
-    if (import.meta.env.DEV) console.log('[dev-seed] Password set to "testtest"');
+    if (import.meta.env.DEV) console.log('[dev-seed] ✅ Password set to "testtest"');
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('[dev-seed] ❌ Failed to set password:', err);
+    throw err;
   }
 
-  // Seed account
-  let account = await getFirstAccount();
-  if (!account) {
-    const id = await createAccount({
-      name: 'Compte Courant',
-      bank_name: 'Crédit Agricole',
-      account_number: '00012345678',
-    });
-    account = { id, name: 'Compte Courant', bank_name: 'Crédit Agricole', account_number: '00012345678', currency: 'EUR', is_active: true, created_at: '' };
-    if (import.meta.env.DEV) console.log('[dev-seed] Account created');
-  }
-
-  // Seed fiscal years
-  const data = seedData as unknown as SeedStructure;
-  const existingFYs = await getFiscalYears(account.id);
-
-  for (const fy of data.fiscal_years) {
-    const exists = existingFYs.find((e) => e.label === fy.label);
-    if (!exists) {
-      await createFiscalYear({
-        account_id: account.id,
-        label: fy.label,
-        start_year: fy.start_year,
-        start_month: fy.start_month,
-        opening_balance: fy.opening_balance,
+  try {
+    // Seed account
+    let account = await getFirstAccount();
+    if (!account) {
+      const id = await createAccount({
+        name: 'Compte Courant',
+        bank_name: 'Crédit Agricole',
+        account_number: '00012345678',
       });
-      if (import.meta.env.DEV) console.log(`[dev-seed] Fiscal year ${fy.label} created`);
+      account = { id, name: 'Compte Courant', bank_name: 'Crédit Agricole', account_number: '00012345678', currency: 'EUR', is_active: true, created_at: '' };
+      if (import.meta.env.DEV) console.log('[dev-seed] Account created');
     }
-  }
 
-  // Seed transactions
-  await seedTransactions(account.id, data);
+    // Seed fiscal years
+    const data = seedData as unknown as SeedStructure;
+    const existingFYs = await getFiscalYears(account.id);
+
+    for (const fy of data.fiscal_years) {
+      const exists = existingFYs.find((e) => e.label === fy.label);
+      if (!exists) {
+        await createFiscalYear({
+          account_id: account.id,
+          label: fy.label,
+          start_year: fy.start_year,
+          start_month: fy.start_month,
+          opening_balance: fy.opening_balance,
+        });
+        if (import.meta.env.DEV) console.log(`[dev-seed] Fiscal year ${fy.label} created`);
+      }
+    }
+
+    // Seed transactions
+    await seedTransactions(account.id, data);
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('[dev-seed] ❌ Failed to seed data:', err);
+    // Don't throw - password is already set which is the critical part
+  }
 }
 
 async function seedTransactions(accountId: number, data: SeedStructure): Promise<void> {

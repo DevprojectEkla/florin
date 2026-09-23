@@ -121,6 +121,11 @@
     "previous": "Précédent",
     "next": "Suivant",
     "reset": "Réinitialiser",
+    "delete": "Supprimer",
+    "delete_confirm": "Supprimer cette transaction manuellement ? Cette action est irréversible.",
+    "attributed_month": "Mois attribué (budget)",
+    "attributed_month_hint": "Permet d'associer ce revenu à un mois différent de sa date réelle, pour un affichage correct dans le budget.",
+    "attributed_month_clear": "Réinitialiser",
     "unsaved_changes": "Vous avez des modifications non enregistrées. Fermer quand même ?"
   },
   "transactions": {
@@ -346,5 +351,18 @@
     "empty":           "Aucun investissement — ajoutez un véhicule pour commencer",
     "delete_position_title": "Supprimer cette position ?",
     "delete_position_message": "Cette position sera définitivement supprimée."
+  },
+  "manual_tx": {
+    "title":                    "Ajouter une transaction",
+    "add_button":               "Ajouter",
+    "type":                     "Type",
+    "amount":                   "Montant",
+    "label_placeholder":        "ex: Bière bar du coin",
+    "type_placeholder":         "ex: CB, VIR, PRLV…",
+    "original_label_placeholder": "ex: CARTE 12/09 BIERE BAR DU COIN",
+    "save":                     "Enregistrer",
+    "error_date":               "La date est requise",
+    "error_label":              "Le libellé est requis",
+    "error_amount":             "Montant invalide (doit être > 0)"
   }
 }

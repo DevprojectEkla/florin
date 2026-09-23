@@ -71,6 +71,57 @@ export async function createFiscalYear(input: CreateFiscalYearInput): Promise<nu
   return result.lastInsertId as number;
 }
 
+/**
+ * Given a transaction date, return the fiscal year it belongs to, creating a
+ * new fiscal year on the fly if none exists yet. The start month is inherited
+ * from the account's existing fiscal years (defaults to 9 = September).
+ *
+ * A fiscal year "YYYY-(YYYY+1)" starting in month M covers dates from
+ * YYYY-M-01 up to (YYYY+1)-(M-1)-end.
+ */
+export async function resolveFiscalYearForDate(
+  accountId: number,
+  isoDate: string // 'YYYY-MM-DD'
+): Promise<FiscalYear> {
+  const db = await getDb();
+
+  const [y, m] = isoDate.split('-').map(Number);
+
+  // Determine the start month from an existing fiscal year, default to September
+  const existing = await db.select<FiscalYear[]>(
+    'SELECT * FROM fiscal_years WHERE account_id = ? ORDER BY start_year DESC LIMIT 1',
+    [accountId]
+  );
+  const startMonth = existing[0]?.start_month ?? 9;
+
+  // The fiscal year's starting calendar year for this date:
+  // if the month is >= startMonth, the FY started this year; otherwise it started last year.
+  const fyStartYear = m >= startMonth ? y : y - 1;
+
+  // Look for an existing fiscal year matching that start
+  const match = await db.select<FiscalYear[]>(
+    'SELECT * FROM fiscal_years WHERE account_id = ? AND start_year = ? AND start_month = ?',
+    [accountId, fyStartYear, startMonth]
+  );
+  if (match.length > 0) return match[0];
+
+  // None exists — create it. Carry forward the previous year's closing balance
+  // is left to the balance logic; opening_balance stays null (unknown) here.
+  const label = `${fyStartYear}-${fyStartYear + 1}`;
+  const id = await createFiscalYear({
+    account_id: accountId,
+    label,
+    start_year: fyStartYear,
+    start_month: startMonth,
+  });
+
+  const created = await db.select<FiscalYear[]>(
+    'SELECT * FROM fiscal_years WHERE id = ?',
+    [id]
+  );
+  return created[0];
+}
+
 // ─── Onboarding check ────────────────────────────────────────────────────────
 
 export async function isOnboardingComplete(): Promise<boolean> {

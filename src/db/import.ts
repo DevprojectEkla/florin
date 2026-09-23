@@ -1,5 +1,6 @@
 import { getDb } from './client';
 import { dedupKey } from '../lib/utils';
+import { resolveFiscalYearForDate } from './accounts';
 import type { ParsedImport } from '../lib/ca-parser';
 
 export interface ImportResult {
@@ -54,11 +55,24 @@ export async function importTransactions(
   let imported = 0;
   let skipped = 0;
 
+  // Track how many times each base hash appears in this file so that
+  // legitimate duplicate purchases (same day, same label, same amount)
+  // are not incorrectly deduplicated against each other.
+  const hashCountInFile = new Map<string, number>();
+
   for (const tx of parsed.transactions) {
     const amount = tx.debit ?? tx.credit ?? 0;
-    const hash = generateHash(tx.date, tx.label, amount);
+    const baseHash = generateHash(tx.date, tx.label, amount);
 
-    // Check for duplicate
+    // Increment occurrence counter for this file
+    const occurrence = (hashCountInFile.get(baseHash) ?? 0) + 1;
+    hashCountInFile.set(baseHash, occurrence);
+
+    // Qualify the hash with the occurrence index so that the 2nd, 3rd…
+    // identical transaction in the same file gets a distinct hash.
+    const hash = occurrence > 1 ? `${baseHash}#${occurrence}` : baseHash;
+
+    // Check for duplicate against already-stored transactions
     const existing = await db.select<{ id: number }[]>(
       'SELECT id FROM transactions WHERE dedup_hash = ?',
       [hash]
@@ -72,6 +86,10 @@ export async function importTransactions(
     // Classify
     const categoryId = classifyTransaction(tx.label, rules);
 
+    // Resolve the fiscal year for THIS transaction's date, creating a new one
+    // if the date falls outside all existing fiscal years (e.g. new year starts).
+    const txFiscalYear = await resolveFiscalYearForDate(accountId, tx.date);
+
     // Insert
     await db.execute(
       `INSERT INTO transactions
@@ -79,11 +97,11 @@ export async function importTransactions(
          debit, credit, category_id, is_reviewed, dedup_hash)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        accountId, fiscalYearId, batchId,
+        accountId, txFiscalYear.id, batchId,
         tx.date, tx.label,
         tx.debit, tx.credit,
         categoryId,
-        categoryId ? 0 : 0, // is_reviewed: 0 whether classified or not (user confirms later)
+        0, // is_reviewed: user confirms later
         hash,
       ]
     );

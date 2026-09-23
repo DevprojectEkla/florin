@@ -6,6 +6,7 @@ import { isOnboardingComplete } from './db/accounts';
 import AppLayout from './components/layout/AppLayout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { FiscalYearProvider } from './store/FiscalYearContext';
+import { MonthProvider } from './store/MonthContext';
 import { ThemeProvider } from './store/ThemeContext';
 import LockScreen from './pages/LockScreen';
 import OnboardingWizard from './pages/OnboardingWizard';
@@ -24,6 +25,7 @@ export default function App() {
   useEffect(() => {
     async function init() {
       try {
+        console.log('[App] Initializing... DEV mode:', import.meta.env.DEV);
         const db = await getDb();
         // Restore persisted language
         const langRows = await db.select<{ value: string }[]>(
@@ -36,20 +38,27 @@ export default function App() {
           }
         }
 
-        // Dev mode: seed default password so we skip setup screen
+        // Dev mode: seed default password and skip auth screens
         if (import.meta.env.DEV) {
+          console.log('[App] DEV mode - running devSeedAuth');
           const { devSeedAuth } = await import('./db/dev-seed');
           await devSeedAuth();
-        }
-
-        // Check if password is set
-        const hash = await getPasswordHash();
-        if (!hash) {
-          setState('setup');
+          console.log('[App] devSeedAuth complete');
+          
+          // In dev mode, auto-unlock and check onboarding
+          const complete = await isOnboardingComplete();
+          setState(complete ? 'ready' : 'onboarding');
         } else {
-          setState('locked');
+          // Production: check if password is set
+          const hash = await getPasswordHash();
+          if (!hash) {
+            setState('setup');
+          } else {
+            setState('locked');
+          }
         }
       } catch (e) {
+        console.error('[App] DB init error:', e);
         if (import.meta.env.DEV) console.error('DB init error', e);
         setState('setup');
       }
@@ -89,18 +98,20 @@ export default function App() {
       <ThemeProvider>
         <HashRouter>
           <FiscalYearProvider>
-            <AppLayout>
-              <Routes>
-                <Route path="/"              element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard"     element={<Dashboard />} />
-                <Route path="/transactions"  element={<Transactions />} />
-                <Route path="/import"        element={<Import />} />
-                <Route path="/budget"        element={<Budget />} />
-                <Route path="/investments"   element={<Investments />} />
-                <Route path="/settings"      element={<Settings />} />
-              </Routes>
-          </AppLayout>
-        </FiscalYearProvider>
+            <MonthProvider>
+              <AppLayout>
+                <Routes>
+                  <Route path="/"              element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard"     element={<Dashboard />} />
+                  <Route path="/transactions"  element={<Transactions />} />
+                  <Route path="/import"        element={<Import />} />
+                  <Route path="/budget"        element={<Budget />} />
+                  <Route path="/investments"   element={<Investments />} />
+                  <Route path="/settings"      element={<Settings />} />
+                </Routes>
+              </AppLayout>
+            </MonthProvider>
+          </FiscalYearProvider>
       </HashRouter>
       </ThemeProvider>
     </ErrorBoundary>

@@ -24,37 +24,41 @@ export async function getBudgetLines(fiscalYearId: number): Promise<BudgetLineWi
 export async function upsertBudgetLine(
   fiscalYearId: number,
   categoryId: number,
-  monthlyAmount: number
+  monthlyAmount: number,
+  minAmount?: number | null,
+  maxAmount?: number | null,
 ): Promise<void> {
   const db = await getDb();
   if (monthlyAmount <= 0) {
-    // Remove the line if amount is zero
     await db.execute(
       'DELETE FROM budget_lines WHERE fiscal_year_id = ? AND category_id = ?',
       [fiscalYearId, categoryId]
     );
   } else {
     await db.execute(
-      `INSERT INTO budget_lines (fiscal_year_id, category_id, monthly_amount)
-       VALUES (?, ?, ?)
-       ON CONFLICT(fiscal_year_id, category_id) DO UPDATE SET monthly_amount = ?`,
-      [fiscalYearId, categoryId, monthlyAmount, monthlyAmount]
+      `INSERT INTO budget_lines (fiscal_year_id, category_id, monthly_amount, min_amount, max_amount)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(fiscal_year_id, category_id) DO UPDATE SET
+         monthly_amount = excluded.monthly_amount,
+         min_amount     = excluded.min_amount,
+         max_amount     = excluded.max_amount`,
+      [fiscalYearId, categoryId, monthlyAmount, minAmount ?? null, maxAmount ?? null]
     );
   }
 }
 
 export async function setBudgetBatch(
   fiscalYearId: number,
-  lines: { categoryId: number; amount: number }[]
+  lines: { categoryId: number; amount: number; minAmount?: number | null; maxAmount?: number | null }[]
 ): Promise<void> {
   const db = await getDb();
-  // Delete existing for this FY, then insert fresh
   await db.execute('DELETE FROM budget_lines WHERE fiscal_year_id = ?', [fiscalYearId]);
   for (const line of lines) {
     if (line.amount > 0) {
       await db.execute(
-        'INSERT INTO budget_lines (fiscal_year_id, category_id, monthly_amount) VALUES (?, ?, ?)',
-        [fiscalYearId, line.categoryId, line.amount]
+        `INSERT INTO budget_lines (fiscal_year_id, category_id, monthly_amount, min_amount, max_amount)
+         VALUES (?, ?, ?, ?, ?)`,
+        [fiscalYearId, line.categoryId, line.amount, line.minAmount ?? null, line.maxAmount ?? null]
       );
     }
   }
@@ -68,9 +72,11 @@ export interface BudgetComparison {
   category_icon: string | null;
   category_color: string | null;
   budgeted: number;
+  min_amount: number | null;
+  max_amount: number | null;
   actual: number;
-  delta: number;       // negative = under budget (good), positive = over budget
-  percentage: number;  // actual / budgeted * 100
+  delta: number;
+  percentage: number;
 }
 
 export async function getBudgetComparison(
@@ -80,11 +86,9 @@ export async function getBudgetComparison(
 ): Promise<BudgetComparison[]> {
   const db = await getDb();
 
-  // Get budget lines
   const budgetLines = await getBudgetLines(fiscalYearId);
   if (budgetLines.length === 0) return [];
 
-  // Get actual spending per category for this month
   const actuals = await db.select<{ category_id: number; total: number }[]>(
     `SELECT category_id, COALESCE(SUM(debit), 0) as total
      FROM transactions
@@ -106,6 +110,8 @@ export async function getBudgetComparison(
       category_icon: bl.category_icon,
       category_color: bl.category_color,
       budgeted: bl.monthly_amount,
+      min_amount: bl.min_amount,
+      max_amount: bl.max_amount,
       actual,
       delta: actual - bl.monthly_amount,
       percentage: bl.monthly_amount > 0 ? (actual / bl.monthly_amount) * 100 : 0,
@@ -118,6 +124,11 @@ export interface BudgetSummary {
   total_actual: number;
   total_delta: number;
   percentage: number;
+  month_income: number;       // total credits (income) for the month
+  available: number;          // month_income - total_actual (real remaining)
+  count_ok: number;           // categories under min
+  count_warning: number;      // categories between min and max
+  count_over: number;         // categories over max (or over budgeted if no range)
 }
 
 export async function getBudgetSummary(
@@ -125,29 +136,68 @@ export async function getBudgetSummary(
   year: number,
   month: number
 ): Promise<BudgetSummary> {
+  const db = await getDb();
   const comparisons = await getBudgetComparison(fiscalYearId, year, month);
   const total_budgeted = comparisons.reduce((s, c) => s + c.budgeted, 0);
-  const total_actual = comparisons.reduce((s, c) => s + c.actual, 0);
+  const total_actual   = comparisons.reduce((s, c) => s + c.actual, 0);
+
+  // Total income attributed to this month.
+  // Uses attributed_month tag when set (either manually or pre-populated at import).
+  // When no tag is set, income is counted on its actual transaction date.
+  // The day-based heuristic has been removed — all salary attributions are
+  // managed explicitly via the attributed_month column.
+  const incomeRows = await db.select<{ total: number }[]>(
+    `SELECT COALESCE(SUM(credit), 0) as total
+     FROM transactions t
+     JOIN categories c ON c.id = t.category_id
+     WHERE c.type = 'income'
+       AND (
+         -- Has an explicit attributed_month tag pointing to this month
+         (t.attributed_month = printf('%04d-%02d', ?, ?))
+         OR
+         -- No tag: use actual transaction date
+         (t.attributed_month IS NULL
+           AND CAST(strftime('%Y', t.date) AS INTEGER) = ?
+           AND CAST(strftime('%m', t.date) AS INTEGER) = ?)
+       )`,
+    [year, month, year, month]
+  );
+  const month_income = incomeRows[0]?.total ?? 0;
+
+  // Per-category status counts
+  let count_ok = 0, count_warning = 0, count_over = 0;
+  for (const c of comparisons) {
+    if (c.max_amount != null && c.min_amount != null) {
+      if (c.actual > c.max_amount)       count_over++;
+      else if (c.actual >= c.min_amount) count_warning++;
+      else                               count_ok++;
+    } else {
+      if (c.actual > c.budgeted * 1.1)   count_over++;
+      else if (c.actual > c.budgeted * 0.9) count_warning++;
+      else                               count_ok++;
+    }
+  }
+
   return {
     total_budgeted,
     total_actual,
     total_delta: total_actual - total_budgeted,
     percentage: total_budgeted > 0 ? (total_actual / total_budgeted) * 100 : 0,
+    month_income,
+    available: month_income - total_actual,
+    count_ok,
+    count_warning,
+    count_over,
   };
 }
 
 // ─── Pre-fill from historical averages ───────────────────────────────────────
 
-/**
- * Compute average monthly spending per expense category from a fiscal year's
- * actual transaction data. Used to pre-fill budget targets based on real history.
- */
 export async function computeAveragesFromHistory(
   fiscalYearId: number
 ): Promise<{ categoryId: number; average: number }[]> {
   const db = await getDb();
 
-  // Count distinct months with transaction data
   const months = await db.select<{ n: number }[]>(
     `SELECT COUNT(DISTINCT strftime('%Y-%m', date)) as n
      FROM transactions WHERE fiscal_year_id = ?`,
@@ -155,7 +205,6 @@ export async function computeAveragesFromHistory(
   );
   const monthCount = Math.max(months[0]?.n ?? 1, 1);
 
-  // Total spending per expense category (debits only)
   const totals = await db.select<{ category_id: number; total: number }[]>(
     `SELECT t.category_id, COALESCE(SUM(t.debit), 0) as total
      FROM transactions t

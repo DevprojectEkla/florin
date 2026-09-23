@@ -3,6 +3,7 @@ import {
   getVehicles, createVehicle, updateVehicle, deleteVehicle,
   getPositions, getAllPositions, createPosition, updatePosition, deletePosition,
   getRiskBreakdown, getVehicleSummaries,
+  getAllYearsVehicleSummaries, getAllYearsRiskBreakdown, getAllYearsPositions,
 } from '../db/portfolio';
 
 export function useVehicles(fyId: number | undefined) {
@@ -23,6 +24,19 @@ export function useRiskBreakdown(fyId: number | undefined) {
 
 export function useVehicleSummaries(fyId: number | undefined) {
   return useQuery({ queryKey: ['portfolio', 'summaries', fyId], queryFn: () => getVehicleSummaries(fyId!), enabled: !!fyId });
+}
+
+// All-years hooks (fyId === null)
+export function useAllYearsVehicleSummaries() {
+  return useQuery({ queryKey: ['portfolio', 'summaries', 'all-years'], queryFn: getAllYearsVehicleSummaries });
+}
+
+export function useAllYearsRiskBreakdown() {
+  return useQuery({ queryKey: ['portfolio', 'risk', 'all-years'], queryFn: getAllYearsRiskBreakdown });
+}
+
+export function useAllYearsPositions() {
+  return useQuery({ queryKey: ['portfolio', 'all-positions', 'all-years'], queryFn: getAllYearsPositions });
 }
 
 export function useCreateVehicle() {
