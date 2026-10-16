@@ -101,6 +101,11 @@
     "previous": "Previous",
     "next": "Next",
     "reset": "Reset Changes",
+    "delete": "Delete",
+    "delete_confirm": "Delete this manual transaction? This action cannot be undone.",
+    "attributed_month": "Attributed month (budget)",
+    "attributed_month_hint": "Assign this income to a different month for correct budget tracking.",
+    "attributed_month_clear": "Clear",
     "unsaved_changes": "You have unsaved changes. Close anyway?"
   },
   "filters": {
@@ -346,5 +351,18 @@
     "empty":           "No investments — add a vehicle to get started",
     "delete_position_title": "Delete this position?",
     "delete_position_message": "This position will be permanently deleted."
+  },
+  "manual_tx": {
+    "title":                    "Add a transaction",
+    "add_button":               "Add",
+    "type":                     "Type",
+    "amount":                   "Amount",
+    "label_placeholder":        "e.g. Beer at the bar",
+    "type_placeholder":         "e.g. CB, VIR, DD…",
+    "original_label_placeholder": "e.g. CARD 12/09 BEER AT THE BAR",
+    "save":                     "Save",
+    "error_date":               "Date is required",
+    "error_label":              "Description is required",
+    "error_amount":             "Invalid amount (must be > 0)"
   }
 }

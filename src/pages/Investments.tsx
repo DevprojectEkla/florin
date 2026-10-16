@@ -4,6 +4,7 @@ import { useFiscalYear } from '../store/FiscalYearContext';
 import {
   useVehicleSummaries, useRiskBreakdown, useAllPositions,
   useCreateVehicle, useCreatePosition, useDeletePosition,
+  useAllYearsVehicleSummaries, useAllYearsRiskBreakdown, useAllYearsPositions,
 } from '../hooks/usePortfolio';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -21,9 +22,21 @@ const RISK_ORDER = ['stable', 'moyen', 'volatile', 'très volatile', 'non class�
 export default function Investments() {
   const { t } = useTranslation();
   const { selected: fiscalYear, selectedId: fyId } = useFiscalYear();
-  const { data: summaries = [] } = useVehicleSummaries(fyId ?? undefined);
-  const { data: riskData = [] }  = useRiskBreakdown(fyId ?? undefined);
-  const { data: allPositions = [] } = useAllPositions(fyId ?? undefined);
+  const isAllYears = fyId === null;
+
+  // Per-fiscal-year data
+  const { data: summaries = [] }    = useVehicleSummaries(isAllYears ? undefined : fyId ?? undefined);
+  const { data: riskData = [] }     = useRiskBreakdown(isAllYears ? undefined : fyId ?? undefined);
+  const { data: allPositions = [] } = useAllPositions(isAllYears ? undefined : fyId ?? undefined);
+
+  // All-years aggregated data
+  const { data: allYearsSummaries = [] }  = useAllYearsVehicleSummaries();
+  const { data: allYearsRisk = [] }       = useAllYearsRiskBreakdown();
+  const { data: allYearsPositions = [] }  = useAllYearsPositions();
+
+  // Active dataset depending on mode
+  const activeSummaries  = isAllYears ? allYearsSummaries  : summaries;
+  const activeRisk       = isAllYears ? allYearsRisk       : riskData;
 
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [showAddPosition, setShowAddPosition] = useState(false);
@@ -33,15 +46,11 @@ export default function Investments() {
   const createPositionMut = useCreatePosition();
   const deletePositionMut = useDeletePosition();
 
-  const grandTotal = summaries.reduce((s, v) => s + v.total, 0);
+  const grandTotal = activeSummaries.reduce((s, v) => s + v.total, 0);
 
-  if (!fyId) {
-    return (
-      <div className="p-6">
-        <div className="card text-slate-400">{t('portfolio.select_year')}</div>
-      </div>
-    );
-  }
+  // In all-years mode we show aggregated positions (with fiscal year column)
+  // In per-year mode we show standard positions
+  const showAllYearsPositions = isAllYears;
 
   return (
     <div className="p-6 space-y-6">
@@ -49,52 +58,69 @@ export default function Investments() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">{t('nav.investments')}</h1>
-          <p className="text-slate-400 text-sm">{fiscalYear?.label}</p>
+          <p className="text-slate-400 text-sm">
+            {isAllYears ? t('fiscal_year.all_years') : fiscalYear?.label}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button className="btn-ghost text-sm" onClick={() => setShowAddVehicle(true)}>
-            + {t('portfolio.add_vehicle')}
-          </button>
-          {summaries.length > 0 && (
-            <button className="btn-primary text-sm" onClick={() => setShowAddPosition(true)}>
-              + {t('portfolio.add_position')}
+        {/* Only allow adding vehicles/positions when a specific FY is selected */}
+        {!isAllYears && fyId && (
+          <div className="flex gap-2">
+            <button className="btn-ghost text-sm" onClick={() => setShowAddVehicle(true)}>
+              + {t('portfolio.add_vehicle')}
             </button>
-          )}
-        </div>
+            {summaries.length > 0 && (
+              <button className="btn-primary text-sm" onClick={() => setShowAddPosition(true)}>
+                + {t('portfolio.add_position')}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Summary cards */}
-      {summaries.length > 0 && (
+      {activeSummaries.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           {/* Total */}
           <div className="card">
             <span className="text-xs text-slate-500">{t('portfolio.total_invested')}</span>
             <div className="text-2xl font-bold text-florin-400 mt-1">{grandTotal.toFixed(0)} €</div>
+            {isAllYears && (
+              <div className="text-xs text-slate-500 mt-1">{t('fiscal_year.all_years')}</div>
+            )}
           </div>
           {/* Per vehicle */}
-          {summaries.map((v) => (
-            <div key={v.id} className="card">
+          {activeSummaries.map((v) => (
+            <div key={v.name} className="card">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-200">{v.name}</span>
                 <span className="text-xs text-slate-500">{v.percentage.toFixed(0)}%</span>
               </div>
               <div className="text-lg font-bold text-slate-100 mt-1">{v.total.toFixed(0)} €</div>
-              <div className="text-xs text-slate-500 mt-0.5">
-                {v.positionCount} {t('portfolio.positions')} · {t('portfolio.cash')}: {v.cashBalance.toFixed(0)} €
-              </div>
+              {'cashBalance' in v ? (
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {(v as typeof summaries[0]).positionCount} {t('portfolio.positions')} · {t('portfolio.cash')}: {(v as typeof summaries[0]).cashBalance.toFixed(0)} €
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {t('portfolio.cash')}: {(v as typeof allYearsSummaries[0]).totalCash.toFixed(0)} €
+                  {(v as typeof allYearsSummaries[0]).totalPositions > 0 && (
+                    <> · positions: {(v as typeof allYearsSummaries[0]).totalPositions.toFixed(0)} €</>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
       {/* Risk breakdown */}
-      {riskData.length > 0 && (
+      {activeRisk.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('portfolio.risk_breakdown')}</h2>
           <div className="flex gap-1 h-4 rounded-full overflow-hidden mb-3">
-            {RISK_ORDER.filter((r) => riskData.find((d) => d.risk_level === r))
+            {RISK_ORDER.filter((r) => activeRisk.find((d) => d.risk_level === r))
               .map((level) => {
-                const d = riskData.find((r) => r.risk_level === level);
+                const d = activeRisk.find((r) => r.risk_level === level);
                 if (!d) return null;
                 return (
                   <div
@@ -107,9 +133,9 @@ export default function Investments() {
               })}
           </div>
           <div className="flex flex-wrap gap-4">
-            {RISK_ORDER.filter((r) => riskData.find((d) => d.risk_level === r))
+            {RISK_ORDER.filter((r) => activeRisk.find((d) => d.risk_level === r))
               .map((level) => {
-                const d = riskData.find((r) => r.risk_level === level)!;
+                const d = activeRisk.find((r) => r.risk_level === level)!;
                 return (
                   <div key={level} className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} />
@@ -122,8 +148,45 @@ export default function Investments() {
         </div>
       )}
 
-      {/* Positions table */}
-      {allPositions.length > 0 && (
+      {/* Positions table — all-years mode shows fiscal year column */}
+      {showAllYearsPositions && allYearsPositions.length > 0 && (
+        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
+                <th className="px-3 py-2.5 text-left">{t('portfolio.name')}</th>
+                <th className="px-3 py-2.5 text-left w-20">{t('portfolio.vehicle_col')}</th>
+                <th className="px-3 py-2.5 text-left w-24">Exercice</th>
+                <th className="px-3 py-2.5 text-left w-20">{t('portfolio.type')}</th>
+                <th className="px-3 py-2.5 text-left">{t('portfolio.sector')}</th>
+                <th className="px-3 py-2.5 text-left w-24">{t('portfolio.risk')}</th>
+                <th className="px-3 py-2.5 text-right w-24">{t('portfolio.amount')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700/50">
+              {allYearsPositions.map((pos) => (
+                <tr key={pos.id} className="hover:bg-slate-700/30">
+                  <td className="px-3 py-2 text-slate-200">{pos.name}</td>
+                  <td className="px-3 py-2 text-xs text-slate-400">{pos.vehicle_name}</td>
+                  <td className="px-3 py-2 text-xs text-slate-500">{pos.fiscal_year_label}</td>
+                  <td className="px-3 py-2 text-xs text-slate-400">{pos.asset_type ?? '—'}</td>
+                  <td className="px-3 py-2 text-xs text-slate-400">{pos.sector ?? '—'}</td>
+                  <td className="px-3 py-2">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: RISK_COLORS[pos.risk_level ?? 'non classé'] }} />
+                      <span className="text-xs text-slate-300">{pos.risk_level ?? '—'}</span>
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono text-slate-200">{pos.amount.toFixed(0)} €</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Positions table — per fiscal year */}
+      {!showAllYearsPositions && allPositions.length > 0 && (
         <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -146,10 +209,7 @@ export default function Investments() {
                   <td className="px-3 py-2 text-xs text-slate-400">{pos.sector ?? '—'}</td>
                   <td className="px-3 py-2">
                     <span className="flex items-center gap-1.5">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: RISK_COLORS[pos.risk_level ?? 'non classé'] }}
-                      />
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: RISK_COLORS[pos.risk_level ?? 'non classé'] }} />
                       <span className="text-xs text-slate-300">{pos.risk_level ?? '—'}</span>
                     </span>
                   </td>
@@ -172,49 +232,54 @@ export default function Investments() {
       )}
 
       {/* Empty state */}
-      {summaries.length === 0 && (
+      {activeSummaries.length === 0 && (
         <div className="card text-center py-12 text-slate-400">
           <div className="text-4xl mb-3">📊</div>
-          <p>{t('portfolio.empty')}</p>
+          <p>{isAllYears ? t('portfolio.empty') : t('portfolio.empty')}</p>
+          {!isAllYears && fyId && (
+            <button className="btn-ghost text-sm mt-4" onClick={() => setShowAddVehicle(true)}>
+              + {t('portfolio.add_vehicle')}
+            </button>
+          )}
         </div>
       )}
 
-      {/* Add Vehicle Modal */}
-      <AddVehicleModal
-        open={showAddVehicle}
-        onClose={() => setShowAddVehicle(false)}
-        onSubmit={async (data) => {
-          await createVehicleMut.mutateAsync({ fiscalYearId: fyId, ...data });
-          setShowAddVehicle(false);
-        }}
-      />
-
-      {/* Add Position Modal */}
-      <AddPositionModal
-        open={showAddPosition}
-        onClose={() => setShowAddPosition(false)}
-        vehicles={summaries}
-        onSubmit={async (data) => {
-          await createPositionMut.mutateAsync(data);
-          setShowAddPosition(false);
-        }}
-      />
-
-      {/* Delete Position Confirmation */}
-      <ConfirmDialog
-        open={!!deleteTarget}
-        title={t('portfolio.delete_position_title')}
-        message={t('portfolio.delete_position_message')}
-        confirmLabel={t('common.delete')}
-        danger={true}
-        onConfirm={async () => {
-          if (deleteTarget) {
-            await deletePositionMut.mutateAsync(deleteTarget);
-            setDeleteTarget(null);
-          }
-        }}
-        onCancel={() => setDeleteTarget(null)}
-      />
+      {/* Add Vehicle / Position modals — only in per-FY mode */}
+      {!isAllYears && fyId && (
+        <>
+          <AddVehicleModal
+            open={showAddVehicle}
+            onClose={() => setShowAddVehicle(false)}
+            onSubmit={async (data) => {
+              await createVehicleMut.mutateAsync({ fiscalYearId: fyId, ...data });
+              setShowAddVehicle(false);
+            }}
+          />
+          <AddPositionModal
+            open={showAddPosition}
+            onClose={() => setShowAddPosition(false)}
+            vehicles={summaries}
+            onSubmit={async (data) => {
+              await createPositionMut.mutateAsync(data);
+              setShowAddPosition(false);
+            }}
+          />
+          <ConfirmDialog
+            open={!!deleteTarget}
+            title={t('portfolio.delete_position_title')}
+            message={t('portfolio.delete_position_message')}
+            confirmLabel={t('common.delete')}
+            danger={true}
+            onConfirm={async () => {
+              if (deleteTarget) {
+                await deletePositionMut.mutateAsync(deleteTarget);
+                setDeleteTarget(null);
+              }
+            }}
+            onCancel={() => setDeleteTarget(null)}
+          />
+        </>
+      )}
     </div>
   );
 }

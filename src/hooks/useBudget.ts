@@ -46,7 +46,8 @@ export function useSetBudgetBatch() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ fiscalYearId, lines }: {
-      fiscalYearId: number; lines: { categoryId: number; amount: number }[];
+      fiscalYearId: number;
+      lines: { categoryId: number; amount: number; minAmount?: number | null; maxAmount?: number | null }[];
     }) => setBudgetBatch(fiscalYearId, lines),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['budget'] }); },
   });
