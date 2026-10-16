@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useFiscalYear } from '../store/FiscalYearContext';
+import { useViewMonth } from '../store/MonthContext';
 import {
   useUnclassifiedCount,
   useMonthlyAggregates,
@@ -20,12 +21,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { selected: fiscalYear, selectedId: fyId, allFiscalYears, setSelectedId } = useFiscalYear();
 
-  // Default to current month
-  const now = new Date();
-  const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
-  const [viewYear, setViewYear]   = useState(now.getFullYear());
+  // Month/year come from the shared MonthContext (also driven by the sidebar selector)
+  const { viewYear, viewMonth, setViewMonth: setViewYearMonth } = useViewMonth();
   const [showYearOverview, setShowYearOverview] = useState(false);
   const [drilldownCategoryId, setDrilldownCategoryId] = useState<number | null | undefined>(undefined);
+  const [initialFyId] = useState(fyId); // capture the fiscal year present on first render
 
   // When switching to "all years" mode, automatically show year overview
   useEffect(() => {
@@ -34,11 +34,11 @@ export default function Dashboard() {
     }
   }, [fyId]);
 
-  // When changing fiscal year, reset to the first month of that fiscal year
+  // When changing fiscal year, reset to the first month of that fiscal year.
+  // Skip on the initial load so we keep the current calendar month as the default.
   useEffect(() => {
-    if (fiscalYear) {
-      setViewYear(fiscalYear.start_year);
-      setViewMonth(fiscalYear.start_month);
+    if (fiscalYear && fyId !== initialFyId) {
+      setViewYearMonth(fiscalYear.start_year, fiscalYear.start_month);
     }
   }, [fiscalYear?.id]); // Only trigger when fiscal year ID changes
 
@@ -121,8 +121,7 @@ export default function Dashboard() {
               endMonth = 12;
               endYear--;
             }
-            setViewMonth(endMonth);
-            setViewYear(endYear);
+            setViewYearMonth(endYear, endMonth);
           }, 0);
           return;
         }
@@ -132,54 +131,60 @@ export default function Dashboard() {
     }
     
     // Normal navigation (no fiscal year or within bounds)
-    setViewMonth(newMonth);
-    setViewYear(newYear);
+    setViewYearMonth(newYear, newMonth);
   }
   
   function nextMonth() {
-    // Calculate new month
     let newMonth = viewMonth + 1;
     let newYear = viewYear;
     if (newMonth > 12) {
       newMonth = 1;
       newYear++;
     }
-    
+
     if (fiscalYear) {
-      // Fiscal year ends 11 months after start month
+      // Fiscal year ends 11 months after start month (e.g. Sept 2025 → Aug 2026)
       let fyEndMonth = fiscalYear.start_month - 1;
       let fyEndYear = fiscalYear.start_year + 1;
       if (fyEndMonth < 1) {
         fyEndMonth = 12;
         fyEndYear--;
       }
-      
+
       const fyEndDate = new Date(fyEndYear, fyEndMonth - 1);
       const newDate = new Date(newYear, newMonth - 1);
-      
-      // If we're trying to go after fiscal year end, switch to next fiscal year
+
       if (newDate > fyEndDate) {
-        // Find next fiscal year
+        // Beyond theoretical end — check if there are actual data months beyond the boundary
+        // (happens when transactions were imported past the FY end date)
+        const hasDataBeyond = monthly.some(
+          (m) => new Date(m.year, m.month - 1) >= newDate
+        );
+
+        if (hasDataBeyond) {
+          // Allow navigation into the overflow months within this FY's dataset
+          setViewYearMonth(newYear, newMonth);
+          return;
+        }
+
+        // No data beyond — try to switch to next fiscal year
         const sortedFYs = [...allFiscalYears].sort((a, b) => {
           if (a.start_year !== b.start_year) return a.start_year - b.start_year;
           return a.start_month - b.start_month;
         });
         const currentIndex = sortedFYs.findIndex(fy => fy.id === fiscalYear.id);
-        
+
         if (currentIndex < sortedFYs.length - 1) {
-          // Switch to next fiscal year (will auto-reset to its start month via useEffect)
           const nextFY = sortedFYs[currentIndex + 1];
           setSelectedId(nextFY.id);
           return;
         }
-        // No next fiscal year, stay at boundary
+        // No next fiscal year and no data beyond — stay at boundary
         return;
       }
     }
-    
-    // Normal navigation (no fiscal year or within bounds)
-    setViewMonth(newMonth);
-    setViewYear(newYear);
+
+    setViewYearMonth(newYear, newMonth);
   }
 
   if (!fiscalYear && fyId !== null) {
@@ -527,7 +532,7 @@ export default function Dashboard() {
                   className={`w-full flex items-center gap-3 py-1.5 px-2 rounded-lg transition-colors text-left ${
                     isSelected ? 'bg-florin-500/10' : 'hover:bg-slate-700/50'
                   }`}
-                  onClick={() => { setViewYear(m.year); setViewMonth(m.month); }}
+                  onClick={() => setViewYearMonth(m.year, m.month)}
                 >
                   <span className={`w-16 text-xs flex-shrink-0 ${isSelected ? 'text-florin-400 font-medium' : 'text-slate-400'}`}>
                     {t(`months.${m.month}`).slice(0, 4)}
@@ -702,9 +707,11 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
   // For LEP specifically, we need to subtract "transfer.internal" credits (withdrawals from LEP back to checking)
   const savingsTransactions = transactions.filter(tx => tx.category_type === 'savings');
   
-  // Calculate total internal transfer credits (withdrawals from savings accounts)
-  const internalTransferCredits = transactions
-    .filter(tx => tx.category_slug === 'transfer.internal' && tx.credit && tx.credit > 0)
+  // Collect internal transfer credits (withdrawals from LEP back to checking)
+  const internalTransferTxs = transactions
+    .filter(tx => tx.category_slug === 'transfer.internal' && tx.credit && tx.credit > 0);
+
+  const internalTransferCredits = internalTransferTxs
     .reduce((sum, tx) => sum + (tx.credit || 0), 0);
 
   const investments = savingsTransactions
@@ -727,11 +734,9 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
     }, {} as Record<string, { label: string; icon: string; total: number; count: number; transactions: TransactionWithCategory[] }>);
 
   // For LEP savings: subtract internal transfers (withdrawals)
-  // This gives us net savings = deposits - withdrawals
-  // If there are withdrawals but no deposits, show LEP as negative
+  // Also add the withdrawal transactions to the drilldown so they're visible
   if (internalTransferCredits > 0) {
     if (!investments['savings.lep']) {
-      // No LEP deposits this period, but there are withdrawals
       investments['savings.lep'] = {
         label: 'Épargne LEP',
         icon: '🏦',
@@ -742,6 +747,8 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
     } else {
       investments['savings.lep'].total -= internalTransferCredits;
     }
+    // Add withdrawal transactions to the drilldown list
+    investments['savings.lep'].transactions.push(...internalTransferTxs);
   }
 
   const investmentsList = Object.entries(investments)
@@ -821,13 +828,23 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
                     .sort((a, b) => b.date.localeCompare(a.date))
                     .map((tx) => {
                       const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
+                      const isWithdrawal = tx.category_slug === 'transfer.internal' && !!tx.credit;
                       return (
                         <div key={tx.id} className="flex items-center gap-2 py-1 text-sm">
                           <span className="text-xs text-slate-500 font-mono w-20 flex-shrink-0">{tx.date}</span>
-                          <span className="text-xs text-emerald-600/70 bg-emerald-900/20 px-1.5 py-0.5 rounded flex-shrink-0">{type}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${
+                            isWithdrawal
+                              ? 'text-red-400/70 bg-red-900/20'
+                              : 'text-emerald-600/70 bg-emerald-900/20'
+                          }`}>{isWithdrawal ? 'retrait' : type}</span>
                           <span className="text-xs text-slate-300 flex-1 truncate" title={tx.label}>{detail}</span>
-                          <span className="text-xs font-mono text-emerald-400 w-20 text-right flex-shrink-0">
-                            {tx.debit?.toFixed(2)} €
+                          <span className={`text-xs font-mono w-20 text-right flex-shrink-0 ${
+                            isWithdrawal ? 'text-red-400' : 'text-emerald-400'
+                          }`}>
+                            {isWithdrawal
+                              ? `−${tx.credit?.toFixed(2)} €`
+                              : `${tx.debit?.toFixed(2)} €`
+                            }
                           </span>
                         </div>
                       );

@@ -6,7 +6,11 @@ import {
   getMonthlyAggregates,
   getCategoryAggregates,
   updateTransactionCategory,
+  updateTransactionAttributedMonth,
+  insertManualTransaction,
+  deleteTransaction,
 } from '../db/transactions';
+import type { ManualTransactionInput } from '../db/transactions';
 
 export function useTransactions(
   fiscalYearId: number | null | undefined,
@@ -64,6 +68,42 @@ export function useUpdateTransactionCategory() {
       qc.invalidateQueries({ queryKey: ['transactions'] });
       qc.invalidateQueries({ queryKey: ['aggregates'] });
       qc.invalidateQueries({ queryKey: ['balance'] });
+    },
+  });
+}
+
+export function useInsertManualTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ManualTransactionInput) => insertManualTransaction(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+      qc.invalidateQueries({ queryKey: ['aggregates'] });
+      qc.invalidateQueries({ queryKey: ['balance'] });
+    },
+  });
+}
+
+export function useDeleteTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteTransaction(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+      qc.invalidateQueries({ queryKey: ['aggregates'] });
+      qc.invalidateQueries({ queryKey: ['balance'] });
+    },
+  });
+}
+
+export function useUpdateAttributedMonth() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, attributedMonth }: { id: number; attributedMonth: string | null }) =>
+      updateTransactionAttributedMonth(id, attributedMonth),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+      qc.invalidateQueries({ queryKey: ['budget'] });
     },
   });
 }

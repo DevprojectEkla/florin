@@ -17,7 +17,10 @@ import { BulkActionsToolbar } from '../components/transactions/BulkActionsToolba
 import { TransactionDetailModal } from '../components/transactions/TransactionDetailModal';
 import { ExportMenu } from '../components/transactions/ExportMenu';
 import { AdvancedSearchInput } from '../components/transactions/AdvancedSearchInput';
+import { AddTransactionModal } from '../components/transactions/TransactionDetailModal';
 import TransactionCharts from '../components/transactions/TransactionCharts';
+import { useQuery } from '@tanstack/react-query';
+import { getFirstAccount } from '../db/accounts';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -27,6 +30,14 @@ export default function Transactions() {
 
   const { selectedId: fyId, selected: selectedFiscalYear } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
+
+  // Resolve account for manual transaction insertion
+  const { data: firstAccount } = useQuery({
+    queryKey: ['accounts', 'first'],
+    queryFn: getFirstAccount,
+  });
+
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Support "All Years" mode when fyId is null
   const { data: transactions = [], isLoading } = useTransactions(fyId ?? null);
@@ -253,6 +264,17 @@ export default function Transactions() {
         <h1 className="text-2xl font-bold text-slate-100">{t('nav.transactions')}</h1>
         
         <div className="flex items-center gap-3">
+          {/* Add manual transaction */}
+          {firstAccount && fyId !== null && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-florin-600 hover:bg-florin-500 text-white text-sm rounded-lg transition-colors"
+              title="Ajouter une transaction manuellement"
+            >
+              <span className="text-base leading-none">+</span>
+              {t('manual_tx.add_button')}
+            </button>
+          )}
           {/* View Mode Toggle */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg">
             <button
@@ -398,6 +420,16 @@ export default function Transactions() {
         canNavigatePrev={selectedIndex > 0}
         canNavigateNext={selectedIndex < filtered.length - 1}
       />
+
+      {/* Add Manual Transaction Modal */}
+      {firstAccount && fyId !== null && (
+        <AddTransactionModal
+          open={showAddModal}
+          accountId={firstAccount.id}
+          fiscalYearId={fyId}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
     </div>
   );
 }

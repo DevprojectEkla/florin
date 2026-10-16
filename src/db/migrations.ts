@@ -149,6 +149,12 @@ export const MIGRATIONS: string[] = [
 
   // ── Migration 003 — add capital category type ───────────────────────────
   `
+  -- Temporarily disable foreign keys for table restructuring
+  PRAGMA foreign_keys=OFF;
+  
+  -- Drop old temp table if it exists from failed migration
+  DROP TABLE IF EXISTS categories_new;
+  
   -- Drop old constraint and recreate with capital type
   CREATE TABLE categories_new (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,6 +171,9 @@ export const MIGRATIONS: string[] = [
   INSERT INTO categories_new SELECT * FROM categories;
   DROP TABLE categories;
   ALTER TABLE categories_new RENAME TO categories;
+  
+  -- Re-enable foreign keys
+  PRAGMA foreign_keys=ON;
 
   -- Add capital investment categories (INSERT OR IGNORE to avoid duplicates)
   INSERT OR IGNORE INTO categories (slug, label, type, color, icon, is_system, is_active, sort_order) VALUES
@@ -188,6 +197,12 @@ export const MIGRATIONS: string[] = [
 
   // ── Migration 005 — fix CHECK constraint to include capital ───────────────
   `
+  -- Temporarily disable foreign keys for table restructuring
+  PRAGMA foreign_keys=OFF;
+  
+  -- Drop old temp table if it exists from failed migration
+  DROP TABLE IF EXISTS categories_temp;
+  
   -- Recreate categories table with correct CHECK constraint including 'capital'
   CREATE TABLE categories_temp (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -207,6 +222,9 @@ export const MIGRATIONS: string[] = [
   -- Drop old table and rename
   DROP TABLE categories;
   ALTER TABLE categories_temp RENAME TO categories;
+  
+  -- Re-enable foreign keys
+  PRAGMA foreign_keys=ON;
 
   -- Now insert capital categories
   INSERT OR IGNORE INTO categories (slug, label, type, color, icon, is_system, is_active, sort_order) VALUES
@@ -215,5 +233,95 @@ export const MIGRATIONS: string[] = [
     ('capital.clothing', 'Vêtements', 'capital', '#ec4899', '👔', 0, 1, 602),
     ('capital.education', 'Études & Formation', 'capital', '#10b981', '📚', 0, 1, 603),
     ('capital.sports', 'Sport & Équipements', 'capital', '#f59e0b', '⚽', 0, 1, 604);
+  `,
+
+  // ── Migration 006 — add Gifts (Cadeaux) variable category ─────────────────
+  `
+  INSERT OR IGNORE INTO categories (slug, label, type, color, icon, is_system, is_active, sort_order) VALUES
+    ('variable.gifts', 'Cadeaux', 'variable', '#f0abfc', '🎁', 0, 1, 38);
+  `,
+
+  // ── Migration 007 — seed portfolio vehicles from savings transactions ──────
+  // Creates PEA, PEA-PME and CTO vehicles for each existing fiscal year, then
+  // sets their cash_balance to the net amount transacted (debit - credit) so
+  // the investments page reflects actual deposits already made.
+  `
+  -- Insert vehicles for every fiscal year (skip if already present for that FY+name)
+  INSERT OR IGNORE INTO portfolio_vehicles (fiscal_year_id, name, expected_yield, cash_balance)
+  SELECT
+    fy.id,
+    v.name,
+    v.yield,
+    COALESCE((
+      SELECT SUM(t.debit) - COALESCE(SUM(t.credit), 0)
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.fiscal_year_id = fy.id AND c.slug = v.slug
+    ), 0)
+  FROM fiscal_years fy
+  CROSS JOIN (
+    SELECT 'PEA'     AS name, 'savings.pea'     AS slug, 0.09 AS yield UNION ALL
+    SELECT 'PEA-PME' AS name, 'savings.pea_pme' AS slug, 0.07 AS yield UNION ALL
+    SELECT 'CTO'     AS name, 'savings.cto'     AS slug, 0.08 AS yield
+  ) v
+  WHERE NOT EXISTS (
+    SELECT 1 FROM portfolio_vehicles pv
+    WHERE pv.fiscal_year_id = fy.id AND pv.name = v.name
+  );
+  `,
+
+  // ── Migration 008 — fix PEA-PME misclassification & add Bourse Direct rules
+  `
+  -- Recategorise transactions towards account 84034390 (PEA-PME) that were
+  -- incorrectly tagged as savings.pea
+  UPDATE transactions
+  SET category_id = (SELECT id FROM categories WHERE slug = 'savings.pea_pme')
+  WHERE category_id = (SELECT id FROM categories WHERE slug = 'savings.pea')
+    AND label LIKE '%84034390%';
+
+  -- Add high-priority classification rules for Bourse Direct account numbers
+  -- so future imports are routed correctly without manual intervention.
+  INSERT OR IGNORE INTO classification_rules (pattern, pattern_type, category_id, priority, is_active)
+  VALUES
+    ('83486364',  'contains', (SELECT id FROM categories WHERE slug = 'savings.pea'),     120, 1),
+    ('84034390',  'contains', (SELECT id FROM categories WHERE slug = 'savings.pea_pme'), 120, 1),
+    ('PEA PME',   'contains', (SELECT id FROM categories WHERE slug = 'savings.pea_pme'), 115, 1),
+    ('PEA/PME',   'contains', (SELECT id FROM categories WHERE slug = 'savings.pea_pme'), 115, 1),
+    ('versement PEA', 'contains', (SELECT id FROM categories WHERE slug = 'savings.pea'), 110, 1),
+    ('Bourse direct', 'contains', (SELECT id FROM categories WHERE slug = 'savings.pea'),  80, 1),
+    ('Bourse Direct', 'contains', (SELECT id FROM categories WHERE slug = 'savings.pea'),  80, 1);
+
+  -- Refresh vehicle cash_balances now that categorisation is corrected
+  UPDATE portfolio_vehicles
+  SET cash_balance = COALESCE((
+    SELECT SUM(t.debit) - COALESCE(SUM(t.credit), 0)
+    FROM transactions t
+    JOIN categories c ON c.id = t.category_id
+    WHERE t.fiscal_year_id = portfolio_vehicles.fiscal_year_id
+      AND c.slug = CASE portfolio_vehicles.name
+                     WHEN 'PEA'     THEN 'savings.pea'
+                     WHEN 'PEA-PME' THEN 'savings.pea_pme'
+                     WHEN 'CTO'     THEN 'savings.cto'
+                   END
+  ), 0)
+  WHERE name IN ('PEA', 'PEA-PME', 'CTO');
+  `,
+
+  // ── Migration 009 — add min/max budget range columns ──────────────────────
+  `
+ALTER TABLE budget_lines ADD COLUMN min_amount REAL;
+ALTER TABLE budget_lines ADD COLUMN max_amount REAL;
+`,
+  // ── Migration 009 — add min/max budget range columns ──────────────────────
+  `
+  ALTER TABLE budget_lines ADD COLUMN min_amount REAL;
+  ALTER TABLE budget_lines ADD COLUMN max_amount REAL;
+  `,
+  // ── Migration 010 — attributed_month for payroll assignment ──────────────
+  // Allows manually tagging a salary transaction to a specific month (YYYY-MM)
+  // so the budget income calculation uses the intended month rather than the
+  // transaction date. Nullable — when NULL the day-based heuristic applies.
+  `
+  ALTER TABLE transactions ADD COLUMN attributed_month TEXT;
   `,
 ];

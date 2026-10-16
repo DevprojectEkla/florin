@@ -2,12 +2,20 @@ import { getDb } from './client';
 
 /**
  * Compute the current bank balance from static data.
- * 
- * Strategy: Use the LATEST fiscal year's opening_balance as anchor point,
- * then add all credits and subtract all debits for that fiscal year's transactions.
- * 
- * This avoids accumulating errors from older years where extraction may be imperfect.
- * The opening_balance is a known-good value from the bank statement.
+ *
+ * Strategy: Anchor on the CURRENT (latest) fiscal year's opening_balance,
+ * which is the prior year's audited closing balance carried forward, then
+ * add ALL credits and subtract ALL debits recorded from that fiscal year's
+ * start date onward.
+ *
+ * This is standard accounting practice: each fiscal year opens with the
+ * previous year's verified closing balance. Anchoring on the current year
+ * keeps the live balance correct and immune to minor historical
+ * reconciliation noise in earlier years.
+ *
+ * IMPORTANT: Every transaction in the period affects the compte courant
+ * balance. No exclusions - all debits reduce the balance, all credits
+ * increase it.
  */
 export async function computeCurrentBalance(): Promise<{
   balance: number;
@@ -20,11 +28,13 @@ export async function computeCurrentBalance(): Promise<{
 }> {
   const db = await getDb();
 
-  // Get the latest fiscal year (most recent = best anchor)
+  // Get the LATEST fiscal year - its opening_balance is the carry-forward
+  // closing balance from the prior year.
   const fyRows = await db.select<{
     id: number; opening_balance: number | null; label: string;
+    start_year: number; start_month: number;
   }[]>(
-    `SELECT id, opening_balance, label
+    `SELECT id, opening_balance, label, start_year, start_month
      FROM fiscal_years
      ORDER BY start_year DESC, start_month DESC
      LIMIT 1`
@@ -37,7 +47,10 @@ export async function computeCurrentBalance(): Promise<{
   const fy = fyRows[0];
   const openingBalance = fy.opening_balance ?? 0;
 
-  // Sum credits and debits for this fiscal year only
+  // First day of the fiscal year (e.g. 2025-09-01)
+  const fyStart = `${fy.start_year}-${String(fy.start_month).padStart(2, '0')}-01`;
+
+  // Sum credits and debits from the fiscal year start onward - no exclusions
   const totals = await db.select<{
     total_credits: number; total_debits: number;
     tx_count: number; min_date: string | null;
@@ -48,8 +61,8 @@ export async function computeCurrentBalance(): Promise<{
        COUNT(*) as tx_count,
        MIN(date) as min_date
      FROM transactions
-     WHERE fiscal_year_id = ?`,
-    [fy.id]
+     WHERE date >= ?`,
+    [fyStart]
   );
 
   const totalCredits = totals[0]?.total_credits ?? 0;
