@@ -115,6 +115,25 @@ export async function resolveFiscalYearForDate(
     start_month: startMonth,
   });
 
+  // Carry the budget forward from the most recent prior fiscal year so the
+  // new year isn't blank. Uses the immediately preceding FY (by start date).
+  const prior = await db.select<{ id: number }[]>(
+    `SELECT id FROM fiscal_years
+     WHERE account_id = ?
+       AND (start_year < ? OR (start_year = ? AND start_month < ?))
+     ORDER BY start_year DESC, start_month DESC
+     LIMIT 1`,
+    [accountId, fyStartYear, fyStartYear, startMonth]
+  );
+  if (prior.length > 0) {
+    await db.execute(
+      `INSERT INTO budget_lines (fiscal_year_id, category_id, monthly_amount, min_amount, max_amount)
+       SELECT ?, category_id, monthly_amount, min_amount, max_amount
+       FROM budget_lines WHERE fiscal_year_id = ?`,
+      [id, prior[0].id]
+    );
+  }
+
   const created = await db.select<FiscalYear[]>(
     'SELECT * FROM fiscal_years WHERE id = ?',
     [id]

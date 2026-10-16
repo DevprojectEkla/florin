@@ -29,13 +29,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   // Build month options for the selected fiscal year (or current year if none)
   const monthOptions: { year: number; month: number }[] = [];
   if (fiscalYear) {
-    for (let i = 0; i < 13; i++) { // up to 13 months to handle overflow
+    for (let i = 0; i < 12; i++) {
       let m = fiscalYear.start_month + i;
       let y = fiscalYear.start_year;
       if (m > 12) { m -= 12; y++; }
       monthOptions.push({ year: y, month: m });
-      // Stop once we've covered a full year
-      if (i >= 11) break;
     }
   } else {
     // Fallback: current calendar year
@@ -43,6 +41,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     for (let m = 1; m <= 12; m++) {
       monthOptions.push({ year: now.getFullYear(), month: m });
     }
+  }
+
+  // Ensure the currently selected month is always present as an option,
+  // even if it falls outside the theoretical fiscal-year range (e.g. overflow
+  // months reached via the dashboard arrows). Otherwise the <select> can't
+  // display the active value and appears stuck.
+  const hasCurrent = monthOptions.some(o => o.year === viewYear && o.month === viewMonth);
+  if (!hasCurrent) {
+    monthOptions.push({ year: viewYear, month: viewMonth });
+    monthOptions.sort((a, b) =>
+      a.year !== b.year ? a.year - b.year : a.month - b.month
+    );
   }
 
 
