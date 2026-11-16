@@ -1,6 +1,6 @@
 [package]
 name = "florin"
-version = "0.1.0"
+version = "0.1.2"
 description = "Florin — Personal finance desktop app"
 authors = ["DevprojectEkla"]
 edition = "2021"
