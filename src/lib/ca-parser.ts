@@ -46,9 +46,14 @@ export function parseCAFile(buffer: ArrayBuffer, filename: string): ParsedImport
   const { from: periodFrom, to: periodTo } = extractPeriod(rows);
 
   // Find the header row (Date, Libellé, Débit, Crédit)
-  const headerIdx = rows.findIndex(
-    (row) => row && row[0] === 'Date' && typeof row[1] === 'string' && row[1].includes('Libellé')
-  );
+  // Real CA exports label the first column "Date d'opération" (not just "Date"),
+  // and accents/casing can vary, so match tolerantly.
+  const headerIdx = rows.findIndex((row) => {
+    if (!row) return false;
+    const col0 = normalizeHeaderCell(row[0]);
+    const col1 = normalizeHeaderCell(row[1]);
+    return col0.startsWith('date') && col1.includes('libelle');
+  });
 
   if (headerIdx === -1) {
     throw new Error('INVALID_CA_FORMAT: Cannot find header row (Date, Libellé, Débit, Crédit)');
@@ -94,6 +99,16 @@ export function parseCAFile(buffer: ArrayBuffer, filename: string): ParsedImport
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/** Normalize a header cell for tolerant matching: trim, lowercase, strip accents. */
+function normalizeHeaderCell(cell: unknown): string {
+  if (typeof cell !== 'string') return '';
+  return cell
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // strip diacritics (é → e)
+    .trim()
+    .toLowerCase();
+}
 
 function extractAccountNumber(rows: unknown[][]): string | null {
   // Row 5: "Compte de Dépôt n° 00032999227"

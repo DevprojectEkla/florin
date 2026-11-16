@@ -46,3 +46,5 @@ src-tauri/gen/android/build/
 # Kiro specs (local planning only, not in repo)
 .kiro/specs/
 scripts/
+.agents/
+imports
