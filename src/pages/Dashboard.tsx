@@ -12,7 +12,7 @@ import {
 } from '../hooks/useTransactions';
 import { useActiveCategories } from '../hooks/useCategories';
 import { useCurrentBalance } from '../hooks/useBalance';
-import { splitLabel } from '../lib/utils';
+import { splitLabel, sumSavingsNet } from '../lib/utils';
 import type { TransactionWithCategory } from '../db/transactions';
 import type { Category } from '../types';
 
@@ -726,9 +726,10 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
           transactions: [],
         };
       }
-      // For savings: debit = deposits (positive contribution)
-      acc[key].total += (tx.debit || 0);
-      acc[key].count += 1;
+      // For savings: debit = deposit into vehicle (+), credit = drawdown/withdrawal (−)
+      acc[key].total += sumSavingsNet([tx]);
+      // Only deposits count as "versements"; withdrawals still show in the drilldown
+      if (tx.debit) acc[key].count += 1;
       acc[key].transactions.push(tx);
       return acc;
     }, {} as Record<string, { label: string; icon: string; total: number; count: number; transactions: TransactionWithCategory[] }>);
@@ -828,7 +829,7 @@ function InvestmentsSummaryCard({ fyId, year, month, showYearTotal }: {
                     .sort((a, b) => b.date.localeCompare(a.date))
                     .map((tx) => {
                       const { type, detail } = splitLabel(tx.label_clean ?? tx.label);
-                      const isWithdrawal = tx.category_slug === 'transfer.internal' && !!tx.credit;
+                      const isWithdrawal = !!tx.credit && (tx.category_slug === 'transfer.internal' || tx.category_type === 'savings');
                       return (
                         <div key={tx.id} className="flex items-center gap-2 py-1 text-sm">
                           <span className="text-xs text-slate-500 font-mono w-20 flex-shrink-0">{tx.date}</span>

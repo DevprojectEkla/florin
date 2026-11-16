@@ -65,6 +65,21 @@ export function splitLabel(label: string): { type: string; detail: string } {
   return { type: '', detail: label };
 }
 
+/**
+ * Compute the net total of a set of savings transactions for an investment vehicle.
+ * - debit  = money deposited INTO the vehicle (+)
+ * - credit = money drawn down / withdrawn FROM the vehicle (−)
+ * The net can be negative (more withdrawn than deposited in the period).
+ */
+export function sumSavingsNet(
+  transactions: { debit: number | null; credit: number | null }[]
+): number {
+  return transactions.reduce(
+    (sum, tx) => sum + (tx.debit || 0) - (tx.credit || 0),
+    0
+  );
+}
+
 function friendlyType(raw: string): string {
   switch (raw) {
     case 'PAIEMENT PAR CARTE':        return 'Carte';
