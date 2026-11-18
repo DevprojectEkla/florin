@@ -110,7 +110,7 @@ function normalizeHeaderCell(cell: unknown): string {
     .toLowerCase();
 }
 
-function extractAccountNumber(rows: unknown[][]): string | null {
+export function extractAccountNumber(rows: unknown[][]): string | null {
   // Row 5: "Compte de Dépôt n° 00032999227"
   for (let i = 0; i < Math.min(10, rows.length); i++) {
     const cell = String(rows[i]?.[0] ?? '');
@@ -137,7 +137,7 @@ function extractBalance(rows: unknown[][]): number | null {
   return null;
 }
 
-function extractPeriod(rows: unknown[][]): { from: string | null; to: string | null } {
+export function extractPeriod(rows: unknown[][]): { from: string | null; to: string | null } {
   // Row 9: "Liste des opérations du compte entre le DD/MM/YYYY et le DD/MM/YYYY"
   for (let i = 0; i < Math.min(12, rows.length); i++) {
     const cell = String(rows[i]?.[0] ?? '');
@@ -187,7 +187,7 @@ function normalizeAmount(raw: unknown): number | null {
   return null;
 }
 
-function parseEuroAmount(str: string): number | null {
+export function parseEuroAmount(str: string): number | null {
   // Handle " 1 032,86 €" format
   const cleaned = str
     .replace(/[€\s\u00a0]/g, '')  // remove €, spaces, nbsp

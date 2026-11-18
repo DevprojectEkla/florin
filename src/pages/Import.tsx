@@ -3,63 +3,118 @@ import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { parseCAFile, type ParsedImport } from '../lib/ca-parser';
+import {
+  applyMapping,
+  decodeCsvBytes,
+  detectHeaderRow,
+  guessMapping,
+  headerSignature,
+  readCsvTable,
+  type CsvMapping,
+  type CsvTable,
+} from '../lib/csv-import';
 import { importTransactions, type ImportResult } from '../db/import';
+import { loadCsvProfile, saveCsvProfile } from '../db/csv-profiles';
 import { useFirstAccount, useActiveFiscalYear } from '../hooks/useAccounts';
+import CsvMappingStep from '../components/import/CsvMappingStep';
+
+interface CsvSession {
+  table: CsvTable;
+  filename: string;
+  fromProfile: boolean;
+}
 
 export default function Import() {
   const { t } = useTranslation();
   const { data: account } = useFirstAccount();
   const { data: fiscalYear } = useActiveFiscalYear(account?.id);
 
-  const [status, setStatus] = useState<'idle' | 'parsing' | 'importing' | 'done' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'parsing' | 'mapping' | 'importing' | 'done' | 'error'>('idle');
   const [parsed, setParsed] = useState<ParsedImport | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError]   = useState('');
+  const [csv, setCsv]       = useState<CsvSession | null>(null);
+  const [mapping, setMapping] = useState<CsvMapping | null>(null);
+  const [remember, setRemember] = useState(true);
+
+  function reportError(e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (import.meta.env.DEV) console.error('Import error:', e);
+
+    if (msg.includes('INVALID_CA_FORMAT')) {
+      setError(t('import.error_invalid_format'));
+    } else {
+      setError(`${t('common.error')}: ${msg}`);
+    }
+    setStatus('error');
+  }
+
+  async function runImport(parsedData: ParsedImport) {
+    setParsed(parsedData);
+    if (!account || !fiscalYear) {
+      setError(t('import.error_no_account'));
+      setStatus('error');
+      return;
+    }
+    setStatus('importing');
+    const importResult = await importTransactions(parsedData, account.id, fiscalYear.id);
+    setResult(importResult);
+    setStatus('done');
+  }
 
   async function handleSelectFile() {
     try {
       const selected = await open({
         multiple: false,
-        filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
+        filters: [{ name: t('import.file_filter'), extensions: ['xlsx', 'xls', 'csv', 'txt'] }],
       });
 
       if (!selected) return; // User cancelled
 
       const filePath = selected as string;
-      const filename = filePath.split('/').pop() ?? filePath;
+      // Handle both POSIX and Windows path separators
+      const filename = filePath.split(/[\\/]/).pop() ?? filePath;
+      const isCsv = /\.(csv|txt)$/i.test(filename);
 
       setStatus('parsing');
       setError('');
 
       // Read file
       const fileBytes = await readFile(filePath);
-      const buffer = fileBytes.buffer;
 
-      // Parse
-      const parsedData = parseCAFile(buffer as ArrayBuffer, filename);
-      setParsed(parsedData);
-
-      // Auto-import
-      if (!account || !fiscalYear) {
-        setError(t('import.error_no_account'));
-        setStatus('error');
+      if (isCsv) {
+        // CSV layouts differ per bank: detect, then let the user review the mapping.
+        const table = readCsvTable(decodeCsvBytes(fileBytes));
+        const headerRow = Math.max(0, detectHeaderRow(table.rows));
+        const saved = await loadCsvProfile(headerSignature(table.rows[headerRow] ?? []));
+        setCsv({ table, filename, fromProfile: saved !== null });
+        setMapping(saved ? { ...saved, headerRow } : guessMapping(table, headerRow));
+        setStatus('mapping');
         return;
       }
 
-      setStatus('importing');
-      const importResult = await importTransactions(parsedData, account.id, fiscalYear.id);
-      setResult(importResult);
-      setStatus('done');
+      await runImport(parseCAFile(fileBytes.buffer as ArrayBuffer, filename));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (import.meta.env.DEV) console.error('Import error:', e);
+      reportError(e);
+    }
+  }
 
-      if (msg.includes('INVALID_CA_FORMAT')) {
-        setError(t('import.error_invalid_format'));
-      } else {
-        setError(`${t('common.error')}: ${msg}`);
+  function handleHeaderRowChange(headerRow: number) {
+    if (!csv) return;
+    setCsv({ ...csv, fromProfile: false });
+    setMapping(guessMapping(csv.table, headerRow));
+  }
+
+  async function handleConfirmMapping() {
+    if (!csv || !mapping) return;
+    try {
+      const { parsed: parsedData } = applyMapping(csv.table, mapping, csv.filename);
+      if (remember) {
+        await saveCsvProfile(headerSignature(csv.table.rows[mapping.headerRow] ?? []), mapping);
       }
-      setStatus('error');
+      await runImport(parsedData);
+    } catch (e) {
+      reportError(e);
     }
   }
 
@@ -68,10 +123,12 @@ export default function Import() {
     setParsed(null);
     setResult(null);
     setError('');
+    setCsv(null);
+    setMapping(null);
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className={`p-6 mx-auto ${status === 'mapping' ? 'max-w-3xl' : 'max-w-2xl'}`}>
       <h1 className="text-2xl font-bold text-slate-100 mb-2">{t('import.title')}</h1>
       <p className="text-slate-400 text-sm mb-6">{t('import.subtitle')}</p>
 
@@ -87,6 +144,21 @@ export default function Import() {
             {t('import.or')} <span className="text-florin-400 underline">{t('import.browse')}</span>
           </p>
         </div>
+      )}
+
+      {status === 'mapping' && csv && mapping && (
+        <CsvMappingStep
+          table={csv.table}
+          filename={csv.filename}
+          mapping={mapping}
+          fromProfile={csv.fromProfile}
+          remember={remember}
+          onMappingChange={setMapping}
+          onHeaderRowChange={handleHeaderRowChange}
+          onRememberChange={setRemember}
+          onConfirm={handleConfirmMapping}
+          onCancel={handleReset}
+        />
       )}
 
       {status === 'parsing' && (
