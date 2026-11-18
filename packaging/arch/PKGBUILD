@@ -1,0 +1,38 @@
+# Maintainer: DevprojectEkla
+#
+# Builds Florin from the surrounding checkout (no source download), so it works
+# both in CI and locally:
+#
+#   cd packaging/arch && makepkg -si
+#
+# CI sets FLORIN_VERSION from the release tag (e.g. 0.1.2).
+
+pkgname=florin
+pkgver=${FLORIN_VERSION:-0.1.2}
+pkgrel=1
+pkgdesc='Privacy-first personal finance tracker (Tauri)'
+arch=('x86_64')
+url='https://github.com/DevprojectEkla/florin'
+license=('MIT')
+depends=('webkit2gtk-4.1' 'gtk3' 'glib2' 'openssl')
+makedepends=('rust' 'nodejs' 'npm' 'pkgconf')
+# Rust + LTO from the default makepkg flags can fail with Tauri's dependency tree
+options=('!lto')
+
+_root="$startdir/../.."
+
+build() {
+  cd "$_root"
+  npm ci
+  # --no-bundle: only the release binary is needed, pacman does the packaging
+  npm run tauri build -- --no-bundle
+}
+
+package() {
+  cd "$_root"
+  install -Dm755 src-tauri/target/release/florin "$pkgdir/usr/bin/florin"
+  install -Dm644 src-tauri/icons/128x128.png \
+    "$pkgdir/usr/share/icons/hicolor/128x128/apps/florin.png"
+  install -Dm644 packaging/arch/florin.desktop \
+    "$pkgdir/usr/share/applications/florin.desktop"
+}

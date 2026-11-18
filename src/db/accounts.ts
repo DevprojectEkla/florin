@@ -1,5 +1,6 @@
 import { getDb } from './client';
 import type { Account, FiscalYear } from '../types';
+import { normalizeAccountNumber, sameAccountNumber } from '../lib/accounts';
 
 // ─── Accounts ────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,51 @@ export async function createAccount(input: CreateAccountInput): Promise<number> 
   return result.lastInsertId as number;
 }
 
+export interface UpdateAccountInput {
+  name: string;
+  bank_name: string;
+  account_number: string | null;
+}
+
+export async function updateAccount(id: number, input: UpdateAccountInput): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    'UPDATE accounts SET name = ?, bank_name = ?, account_number = ? WHERE id = ?',
+    [input.name, input.bank_name, input.account_number, id]
+  );
+}
+
+/** Find an active account whose number matches `raw` (leading zeros ignored). */
+export async function findAccountByNumber(raw: string | null | undefined): Promise<Account | null> {
+  if (normalizeAccountNumber(raw) === '') return null;
+  const accounts = await getAccounts();
+  return accounts.find((a) => sameAccountNumber(a.account_number, raw)) ?? null;
+}
+
+/** Id of the first-created account; it keeps the legacy (un-prefixed) dedup hashes. */
+export async function getLegacyAccountId(): Promise<number | null> {
+  const db = await getDb();
+  const rows = await db.select<{ id: number | null }[]>('SELECT MIN(id) as id FROM accounts');
+  return rows[0]?.id ?? null;
+}
+
 // ─── Fiscal Years ────────────────────────────────────────────────────────────
+
+/**
+ * Administrative action: overwrite a fiscal year's opening balance.
+ * The current bank balance is anchored on this value, so callers must ask
+ * for explicit confirmation first.
+ */
+export async function setFiscalYearOpeningBalance(
+  fiscalYearId: number,
+  openingBalance: number | null
+): Promise<void> {
+  const db = await getDb();
+  await db.execute('UPDATE fiscal_years SET opening_balance = ? WHERE id = ?', [
+    openingBalance,
+    fiscalYearId,
+  ]);
+}
 
 export async function getFiscalYears(accountId: number): Promise<FiscalYear[]> {
   const db = await getDb();

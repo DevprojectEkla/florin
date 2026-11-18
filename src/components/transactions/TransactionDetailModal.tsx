@@ -169,8 +169,9 @@ export function TransactionDetailModal({
   const { type } = splitLabel(transaction.label_clean ?? transaction.label);
   const amount = transaction.debit || transaction.credit || 0;
   const isDebit = !!transaction.debit;
-  // Only manual transactions (created via the add modal) can be deleted
-  const isManual = transaction.dedup_hash?.startsWith('manual:') ?? false;
+  // Manual entries are gone for good once deleted; imported ones come back if
+  // the same statement is imported again, so the confirmation says so.
+  const isManual = /(^|:)manual:/.test(transaction.dedup_hash ?? '');
 
   return (
     <Modal
@@ -183,7 +184,11 @@ export function TransactionDetailModal({
           {/* Delete confirmation banner — shown above action buttons */}
           {showDeleteConfirm && (
             <div className="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-              <span className="text-sm text-red-300">{t('transaction_detail.delete_confirm')}</span>
+              <span className="text-sm text-red-300">
+                {isManual
+                  ? t('transaction_detail.delete_confirm')
+                  : t('transaction_detail.delete_confirm_imported')}
+              </span>
               <div className="flex items-center gap-2 ml-4 flex-shrink-0">
                 <button
                   className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400 hover:text-slate-200 transition-colors"
@@ -215,7 +220,7 @@ export function TransactionDetailModal({
               >
                 🔄 {t('transaction_detail.reset')}
               </button>
-              {isManual && !showDeleteConfirm && (
+              {!showDeleteConfirm && (
                 <button
                   className="btn-ghost text-red-400 hover:text-red-300"
                   onClick={() => setShowDeleteConfirm(true)}

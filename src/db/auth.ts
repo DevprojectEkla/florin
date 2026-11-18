@@ -1,4 +1,38 @@
+import { invoke } from '@tauri-apps/api/core';
 import { getDb } from './client';
+
+export const MAX_ATTEMPTS = 5;
+export const LOCKOUT_SECONDS = 60;
+
+export type ChangePasswordResult =
+  | { ok: true }
+  | { ok: false; reason: 'WRONG_CURRENT'; remainingAttempts: number }
+  | { ok: false; reason: 'LOCKED'; secondsRemaining: number };
+
+/**
+ * Change the user's password after re-verifying the current one.
+ * Wrong attempts count towards the same lockout as the lock screen, so this
+ * form can't be used to brute-force the password.
+ */
+export async function changePassword(current: string, next: string): Promise<ChangePasswordResult> {
+  const lock = await isLockedOut();
+  if (lock.locked) return { ok: false, reason: 'LOCKED', secondsRemaining: lock.secondsRemaining };
+
+  const hash = await getPasswordHash();
+  const valid = hash ? await invoke<boolean>('verify_password', { password: current, hash }) : false;
+
+  if (!valid) {
+    const res = await recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_SECONDS);
+    return res.locked
+      ? { ok: false, reason: 'LOCKED', secondsRemaining: LOCKOUT_SECONDS }
+      : { ok: false, reason: 'WRONG_CURRENT', remainingAttempts: res.remainingAttempts };
+  }
+
+  const newHash = await invoke<string>('hash_password', { password: next });
+  await setPasswordHash(newHash);
+  await resetFailedAttempts();
+  return { ok: true };
+}
 
 // ─── Migration for auth table (added in PR-03) ────────────────────────────────
 // This runs as migration version 2 — see migrations.ts

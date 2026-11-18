@@ -19,8 +19,7 @@ import { ExportMenu } from '../components/transactions/ExportMenu';
 import { AdvancedSearchInput } from '../components/transactions/AdvancedSearchInput';
 import { AddTransactionModal } from '../components/transactions/TransactionDetailModal';
 import TransactionCharts from '../components/transactions/TransactionCharts';
-import { useQuery } from '@tanstack/react-query';
-import { getFirstAccount } from '../db/accounts';
+import { useActiveAccount } from '../store/AccountContext';
 import type { Column, SortConfig } from '../components/table';
 import type { TransactionWithCategory } from '../db/transactions';
 
@@ -31,11 +30,8 @@ export default function Transactions() {
   const { selectedId: fyId, selected: selectedFiscalYear } = useFiscalYear();
   const { data: categories = [] } = useActiveCategories();
 
-  // Resolve account for manual transaction insertion
-  const { data: firstAccount } = useQuery({
-    queryKey: ['accounts', 'first'],
-    queryFn: getFirstAccount,
-  });
+  // Account that manual transactions are added to
+  const { activeAccount } = useActiveAccount();
 
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -265,7 +261,7 @@ export default function Transactions() {
         
         <div className="flex items-center gap-3">
           {/* Add manual transaction */}
-          {firstAccount && fyId !== null && (
+          {activeAccount && fyId !== null && (
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-florin-600 hover:bg-florin-500 text-white text-sm rounded-lg transition-colors"
@@ -422,10 +418,10 @@ export default function Transactions() {
       />
 
       {/* Add Manual Transaction Modal */}
-      {firstAccount && fyId !== null && (
+      {activeAccount && fyId !== null && (
         <AddTransactionModal
           open={showAddModal}
-          accountId={firstAccount.id}
+          accountId={activeAccount.id}
           fiscalYearId={fyId}
           onClose={() => setShowAddModal(false)}
         />

@@ -5,6 +5,7 @@ import { getPasswordHash } from './db/auth';
 import { isOnboardingComplete } from './db/accounts';
 import AppLayout from './components/layout/AppLayout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { AccountProvider } from './store/AccountContext';
 import { FiscalYearProvider } from './store/FiscalYearContext';
 import { MonthProvider } from './store/MonthContext';
 import { ThemeProvider } from './store/ThemeContext';
@@ -13,6 +14,7 @@ import OnboardingWizard from './pages/OnboardingWizard';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Import from './pages/Import';
+import ImportHistory from './pages/ImportHistory';
 import Budget from './pages/Budget';
 import Investments from './pages/Investments';
 import Settings from './pages/Settings';
@@ -97,6 +99,7 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <HashRouter>
+          <AccountProvider>
           <FiscalYearProvider>
             <MonthProvider>
               <AppLayout>
@@ -105,6 +108,7 @@ export default function App() {
                   <Route path="/dashboard"     element={<Dashboard />} />
                   <Route path="/transactions"  element={<Transactions />} />
                   <Route path="/import"        element={<Import />} />
+                  <Route path="/import/history" element={<ImportHistory />} />
                   <Route path="/budget"        element={<Budget />} />
                   <Route path="/investments"   element={<Investments />} />
                   <Route path="/settings"      element={<Settings />} />
@@ -112,6 +116,7 @@ export default function App() {
               </AppLayout>
             </MonthProvider>
           </FiscalYearProvider>
+          </AccountProvider>
       </HashRouter>
       </ThemeProvider>
     </ErrorBoundary>
