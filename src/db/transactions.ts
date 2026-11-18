@@ -162,6 +162,19 @@ export async function deleteTransaction(id: number): Promise<void> {
   await db.execute('DELETE FROM transactions WHERE id = ?', [id]);
 }
 
+export async function deleteTransactions(ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  // Chunked to stay well under SQLite's bound-parameter limit
+  for (let i = 0; i < ids.length; i += 500) {
+    const chunk = ids.slice(i, i + 500);
+    await db.execute(
+      `DELETE FROM transactions WHERE id IN (${chunk.map(() => '?').join(',')})`,
+      chunk
+    );
+  }
+}
+
 export interface ManualTransactionInput {
   accountId: number;
   fiscalYearId: number;
