@@ -315,7 +315,8 @@
       "rules":      "Règles auto",
       "language":   "Langue",
       "account":    "Compte",
-      "security":   "Sécurité"
+      "security":   "Sécurité",
+      "updates":    "Mises à jour"
     },
     "language": {
       "label": "Langue de l'interface",
@@ -423,6 +424,23 @@
     "search": "Rechercher dans le fichier",
     "rows_shown": "{{shown}} lignes sur {{total}}",
     "read_error": "Impossible de lire le fichier stocké"
+  },
+  "updates": {
+    "title": "Mises à jour",
+    "current_version": "Version actuelle : v{{version}}",
+    "check_now": "Rechercher une mise à jour",
+    "checking": "Recherche…",
+    "up_to_date": "Florin est à jour",
+    "check_error": "Impossible de rechercher les mises à jour. Vérifiez votre connexion et réessayez.",
+    "available": "La version {{version}} est disponible",
+    "install": "Télécharger et installer",
+    "installing": "Installation…",
+    "install_error": "La mise à jour n'a pas pu être installée. Vous pouvez la télécharger depuis la page de la version.",
+    "restart_note": "Florin redémarre pour terminer la mise à jour. Vos données sont conservées.",
+    "managed_externally": "Cette installation est mise à jour par votre gestionnaire de paquets ou votre magasin d'applications.",
+    "open_release_page": "Ouvrir la page de la version",
+    "auto_check": "Rechercher les mises à jour au démarrage",
+    "auto_check_hint": "Contacte GitHub une fois au lancement de l'application. Aucune donnée personnelle n'est envoyée."
   },
   "account_settings": {
     "title": "Comptes",

@@ -84,6 +84,18 @@ Download `florin-v0.3.0-android.apk` from the [releases page](https://github.com
 5. **Categorize** - Assign categories to your transactions
 6. **Track** - Monitor your finances on the dashboard
 
+## 🔄 Updates
+
+- **Windows, macOS, Linux AppImage**: Florin checks GitHub for a newer version when it starts and offers to download and install it (Settings > Updates). Updates are signed; the app refuses anything that doesn't match its built-in public key. You can turn the launch check off in Settings > Updates.
+- **.deb / .rpm / Arch**: Florin tells you a new version exists and links to the release page; install it with your package manager (`dpkg`, `rpm`, `pacman -U`).
+- **Android**: install the new APK manually.
+
+Updates arrive from the `latest.json` file attached to each published GitHub release. Draft releases are not offered to users until published.
+
+### Releasing (maintainers)
+
+Release builds are signed with the Tauri updater key. The private key lives only in the GitHub secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (and in a private backup); the public key is in `src-tauri/tauri.conf.json`. Losing the private key means installed apps can no longer be updated. Local `npm run tauri build` needs the same two variables exported, or add `--config '{"bundle":{"createUpdaterArtifacts":false}}'` to skip signing.
+
 ## 🛠️ Development Setup
 
 ### Prerequisites
