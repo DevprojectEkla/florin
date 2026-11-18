@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useFiscalYear } from '../store/FiscalYearContext';
 import { useViewMonth } from '../store/MonthContext';
+import { useActiveAccount } from '../store/AccountContext';
 import {
   useUnclassifiedCount,
   useMonthlyAggregates,
@@ -24,6 +25,13 @@ export default function Dashboard() {
   // Month/year come from the shared MonthContext (also driven by the sidebar selector)
   const { viewYear, viewMonth, setViewMonth: setViewYearMonth } = useViewMonth();
   const [showYearOverview, setShowYearOverview] = useState(false);
+  // Month view: grouped by category (default) or every raw transaction of the month
+  const [monthView, setMonthView] = useState<'categories' | 'raw'>(() =>
+    localStorage.getItem('dashboard:monthView') === 'raw' ? 'raw' : 'categories'
+  );
+  useEffect(() => {
+    localStorage.setItem('dashboard:monthView', monthView);
+  }, [monthView]);
   const [drilldownCategoryId, setDrilldownCategoryId] = useState<number | null | undefined>(undefined);
   const [initialFyId] = useState(fyId); // capture the fiscal year present on first render
 
@@ -264,6 +272,28 @@ export default function Dashboard() {
                 ⚠️ {unclassified} {t('dashboard.unclassified')}
               </button>
             )}
+            {!showYearOverview && (
+              <div
+                role="group"
+                aria-label={t('dashboard.month_view_label')}
+                className="flex rounded-lg overflow-hidden border border-slate-600"
+              >
+                {(['categories', 'raw'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    aria-pressed={monthView === mode}
+                    className={`text-xs px-3 py-1.5 transition-colors ${
+                      monthView === mode
+                        ? 'bg-florin-500/20 text-florin-400 font-medium'
+                        : 'bg-slate-700 text-slate-400 hover:text-slate-200'
+                    }`}
+                    onClick={() => setMonthView(mode)}
+                  >
+                    {t(`dashboard.view_${mode}`)}
+                  </button>
+                ))}
+              </div>
+            )}
             <button
               className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
                 showYearOverview ? 'bg-florin-500/20 text-florin-400' : 'bg-slate-700 text-slate-400 hover:text-slate-200'
@@ -371,7 +401,7 @@ export default function Dashboard() {
       )}
 
       {/* Month category breakdown - only in month view (not year overview) */}
-      {!isAllYearsMode && !showYearOverview && monthExpenses.length > 0 && (
+      {!isAllYearsMode && !showYearOverview && monthView === 'categories' && monthExpenses.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_by_category')}</h2>
           <div className="space-y-1">
@@ -422,7 +452,7 @@ export default function Dashboard() {
       )}
 
       {/* Month income - only in month view (not year overview) */}
-      {!isAllYearsMode && !showYearOverview && monthIncome.length > 0 && (
+      {!isAllYearsMode && !showYearOverview && monthView === 'categories' && monthIncome.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">{t('dashboard.month_income')}</h2>
           <div className="space-y-1">
@@ -463,7 +493,7 @@ export default function Dashboard() {
       )}
 
       {/* Treasury movements (transfers) - only in month view */}
-      {!isAllYearsMode && !showYearOverview && monthTransfers.length > 0 && (
+      {!isAllYearsMode && !showYearOverview && monthView === 'categories' && monthTransfers.length > 0 && (
         <div className="card">
           <h2 className="text-sm font-medium text-slate-400 mb-3">
             💱 {t('dashboard.month_transfers')}
@@ -506,8 +536,13 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Raw view: every transaction of the month, in date order */}
+      {!isAllYearsMode && !showYearOverview && monthView === 'raw' && (
+        <MonthRawList fyId={fyId} year={viewYear} month={viewMonth} />
+      )}
+
       {/* No data for this month - only in month view (not year overview) */}
-      {!isAllYearsMode && !showYearOverview && !currentMonthData && monthExpenses.length === 0 && (
+      {!isAllYearsMode && !showYearOverview && monthView === 'categories' && !currentMonthData && monthExpenses.length === 0 && (
         <div className="card text-center py-8 text-slate-500">
           {t('dashboard.no_month_data')}
         </div>
@@ -611,6 +646,42 @@ function CategoryDrilldown({ fyId, categoryId, year, month }: {
   );
 }
 
+function MonthRawList({ fyId, year, month }: {
+  fyId: number | null; year: number; month: number;
+}) {
+  const { t } = useTranslation();
+  const { data: categories = [] } = useActiveCategories();
+  const updateCategory = useUpdateTransactionCategory();
+  const { data: transactions = [], isLoading } = useTransactions(fyId, { year, month });
+
+  return (
+    <div className="card">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-medium text-slate-400">{t('dashboard.raw_title')}</h2>
+        <span className="text-xs text-slate-500">
+          {t('dashboard.raw_count', { count: transactions.length })}
+        </span>
+      </div>
+      {isLoading ? (
+        <div className="py-3 text-slate-500 text-xs">{t('common.loading')}</div>
+      ) : transactions.length === 0 ? (
+        <div className="py-6 text-center text-slate-500 text-sm">{t('dashboard.no_month_data')}</div>
+      ) : (
+        <div className="space-y-0.5">
+          {transactions.map((tx) => (
+            <DrilldownRow
+              key={tx.id}
+              tx={tx}
+              categories={categories}
+              onCategoryChange={(catId) => updateCategory.mutate({ id: tx.id, categoryId: catId })}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DrilldownRow({ tx, categories, onCategoryChange }: {
   tx: TransactionWithCategory;
   categories: Category[];
@@ -654,6 +725,7 @@ function DrilldownRow({ tx, categories, onCategoryChange }: {
 function BankBalanceCard() {
   const { t } = useTranslation();
   const { data: balanceData } = useCurrentBalance();
+  const { activeAccount } = useActiveAccount();
 
   if (!balanceData) return null;
 
@@ -662,6 +734,20 @@ function BankBalanceCard() {
       <div className="flex items-center justify-between">
         <div>
           <span className="text-xs text-slate-500 uppercase tracking-wider">{t('dashboard.bank_balance')}</span>
+          {activeAccount && (
+            <span className="ml-2 text-xs text-slate-500 normal-case">
+              {activeAccount.name}
+              {activeAccount.account_number ? ` · ${activeAccount.account_number}` : ''}
+            </span>
+          )}
+          {activeAccount && (
+            <div className="text-xs text-slate-400 mt-0.5">
+              {activeAccount.name}
+              {activeAccount.account_number && (
+                <span className="font-mono text-slate-500 ml-2">{activeAccount.account_number}</span>
+              )}
+            </div>
+          )}
           <div className={`text-2xl font-bold mt-0.5 ${
             balanceData.balance >= 0 ? 'text-florin-400' : 'text-red-400'
           }`}>

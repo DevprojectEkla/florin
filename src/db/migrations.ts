@@ -312,10 +312,12 @@ export const MIGRATIONS: string[] = [
 ALTER TABLE budget_lines ADD COLUMN min_amount REAL;
 ALTER TABLE budget_lines ADD COLUMN max_amount REAL;
 `,
-  // ── Migration 009 — add min/max budget range columns ──────────────────────
+  // ── Migration 010 (accidental duplicate of 009) — intentionally a no-op ───
+  // This used to repeat the ALTER TABLEs above, which fails with "duplicate
+  // column name" on a fresh database. Existing databases already applied it,
+  // so the slot is kept (version numbers are positional) but does nothing.
   `
-  ALTER TABLE budget_lines ADD COLUMN min_amount REAL;
-  ALTER TABLE budget_lines ADD COLUMN max_amount REAL;
+  SELECT 1;
   `,
   // ── Migration 010 — attributed_month for payroll assignment ──────────────
   // Allows manually tagging a salary transaction to a specific month (YYYY-MM)
@@ -323,5 +325,15 @@ ALTER TABLE budget_lines ADD COLUMN max_amount REAL;
   // transaction date. Nullable — when NULL the day-based heuristic applies.
   `
   ALTER TABLE transactions ADD COLUMN attributed_month TEXT;
+  `,
+
+  // ── Migration 012 — import history ───────────────────────────────────────
+  // tx_from / tx_to: first and last transaction date actually found in the
+  // file (period_from/to hold the bank's header text and may differ).
+  // stored_path: copy of the imported file, relative to the app data dir.
+  `
+  ALTER TABLE import_batches ADD COLUMN tx_from TEXT;
+  ALTER TABLE import_batches ADD COLUMN tx_to TEXT;
+  ALTER TABLE import_batches ADD COLUMN stored_path TEXT;
   `,
 ];

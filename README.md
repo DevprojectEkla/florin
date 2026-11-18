@@ -43,6 +43,18 @@ wget https://github.com/DevprojectEkla/florin/releases/download/v0.1.0/Florin-0.
 sudo rpm -i Florin-0.1.0-1.x86_64.rpm
 ```
 
+#### Arch Linux (.pkg.tar.zst)
+```bash
+# Download the .pkg.tar.zst package from the latest release, then:
+sudo pacman -U florin-*.pkg.tar.zst
+```
+
+Or build it yourself from a checkout (needs `rust`, `nodejs`, `npm`, `webkit2gtk-4.1`, `gtk3`):
+```bash
+cd packaging/arch
+makepkg -si
+```
+
 ### Windows
 
 Download `Florin_0.1.0_x64_en-US.msi` from the [releases page](https://github.com/DevprojectEkla/florin/releases) and run the installer.

@@ -11,38 +11,44 @@ import {
   deleteTransaction,
 } from '../db/transactions';
 import type { ManualTransactionInput } from '../db/transactions';
+import { useActiveAccount } from '../store/AccountContext';
 
 export function useTransactions(
   fiscalYearId: number | null | undefined,
   opts?: { month?: number; year?: number; categoryId?: number; unclassifiedOnly?: boolean }
 ) {
+  const { activeAccountId } = useActiveAccount();
+  const scoped = { ...opts, accountId: activeAccountId };
   return useQuery({
-    queryKey: ['transactions', fiscalYearId, opts],
-    queryFn: () => getTransactions(fiscalYearId ?? null, opts),
+    queryKey: ['transactions', fiscalYearId, scoped],
+    queryFn: () => getTransactions(fiscalYearId ?? null, scoped),
     enabled: fiscalYearId !== undefined,
   });
 }
 
 export function useTransactionCount(fiscalYearId: number | null | undefined) {
+  const { activeAccountId } = useActiveAccount();
   return useQuery({
-    queryKey: ['transactions', 'count', fiscalYearId],
-    queryFn: () => getTransactionCount(fiscalYearId ?? null),
+    queryKey: ['transactions', 'count', fiscalYearId, activeAccountId],
+    queryFn: () => getTransactionCount(fiscalYearId ?? null, activeAccountId),
     enabled: fiscalYearId !== undefined,
   });
 }
 
 export function useUnclassifiedCount(fiscalYearId: number | null | undefined) {
+  const { activeAccountId } = useActiveAccount();
   return useQuery({
-    queryKey: ['transactions', 'unclassified', fiscalYearId],
-    queryFn: () => getUnclassifiedCount(fiscalYearId ?? null),
+    queryKey: ['transactions', 'unclassified', fiscalYearId, activeAccountId],
+    queryFn: () => getUnclassifiedCount(fiscalYearId ?? null, activeAccountId),
     enabled: fiscalYearId !== undefined,
   });
 }
 
 export function useMonthlyAggregates(fiscalYearId: number | null | undefined) {
+  const { activeAccountId } = useActiveAccount();
   return useQuery({
-    queryKey: ['aggregates', 'monthly', fiscalYearId],
-    queryFn: () => getMonthlyAggregates(fiscalYearId ?? null),
+    queryKey: ['aggregates', 'monthly', fiscalYearId, activeAccountId],
+    queryFn: () => getMonthlyAggregates(fiscalYearId ?? null, activeAccountId),
     enabled: fiscalYearId !== undefined,
   });
 }
@@ -52,9 +58,10 @@ export function useCategoryAggregates(
   year?: number,
   month?: number
 ) {
+  const { activeAccountId } = useActiveAccount();
   return useQuery({
-    queryKey: ['aggregates', 'category', fiscalYearId, year, month],
-    queryFn: () => getCategoryAggregates(fiscalYearId ?? null, year, month),
+    queryKey: ['aggregates', 'category', fiscalYearId, year, month, activeAccountId],
+    queryFn: () => getCategoryAggregates(fiscalYearId ?? null, year, month, activeAccountId),
     enabled: fiscalYearId !== undefined,
   });
 }

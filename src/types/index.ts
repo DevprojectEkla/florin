@@ -69,6 +69,11 @@ export interface ImportBatch {
   rows_skipped: number | null;
   rows_conflicted: number | null;
   imported_at: string;
+  /** First / last transaction date found in the file. */
+  tx_from: string | null;
+  tx_to: string | null;
+  /** Copy of the file, relative to the app data dir (null if it could not be saved). */
+  stored_path: string | null;
 }
 
 export interface MonthlyBalance {

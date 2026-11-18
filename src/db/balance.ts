@@ -17,7 +17,7 @@ import { getDb } from './client';
  * balance. No exclusions - all debits reduce the balance, all credits
  * increase it.
  */
-export async function computeCurrentBalance(): Promise<{
+export async function computeCurrentBalance(accountId?: number): Promise<{
   balance: number;
   openingBalance: number;
   totalCredits: number;
@@ -36,8 +36,10 @@ export async function computeCurrentBalance(): Promise<{
   }[]>(
     `SELECT id, opening_balance, label, start_year, start_month
      FROM fiscal_years
+     ${accountId !== undefined ? 'WHERE account_id = ?' : ''}
      ORDER BY start_year DESC, start_month DESC
-     LIMIT 1`
+     LIMIT 1`,
+    accountId !== undefined ? [accountId] : []
   );
 
   if (fyRows.length === 0) {
@@ -61,8 +63,8 @@ export async function computeCurrentBalance(): Promise<{
        COUNT(*) as tx_count,
        MIN(date) as min_date
      FROM transactions
-     WHERE date >= ?`,
-    [fyStart]
+     WHERE date >= ?${accountId !== undefined ? ' AND account_id = ?' : ''}`,
+    accountId !== undefined ? [fyStart, accountId] : [fyStart]
   );
 
   const totalCredits = totals[0]?.total_credits ?? 0;
