@@ -170,7 +170,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
         {/* Version + Theme Toggle */}
         <div className="px-3 py-3 border-t border-slate-700 flex items-center justify-between">
-          <span className="text-slate-600 text-xs">v0.1.0</span>
+          <span className="text-slate-600 text-xs">v{__APP_VERSION__}</span>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-200"
