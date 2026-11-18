@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -12,6 +13,7 @@ interface Props {
 const sizeClass = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-5xl' };
 
 export default function Modal({ open, onClose, title, children, footer, size = 'md' }: Props) {
+  const { t } = useTranslation();
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -35,8 +37,11 @@ export default function Modal({ open, onClose, title, children, footer, size = '
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700 flex-shrink-0">
           <h2 className="text-base font-semibold text-slate-100">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-100 transition-colors text-xl leading-none"
+            aria-label={t('common.close')}
+            title={t('common.close')}
+            className="modal-close"
           >
             ×
           </button>

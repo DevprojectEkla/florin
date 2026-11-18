@@ -331,6 +331,7 @@
     "confirm":  "Confirm",
     "next":     "Next",
     "back":     "Back",
+    "close":    "Close",
     "optional": "optional",
     "loading":  "Loading…",
     "error":    "An error occurred",
