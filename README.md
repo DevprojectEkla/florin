@@ -4,7 +4,7 @@
 
 Florin is a desktop application for managing your personal finances with privacy-first approach. All your data stays on your device.
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## ✨ Features
@@ -25,10 +25,10 @@ Florin is a desktop application for managing your personal finances with privacy
 #### Debian/Ubuntu (.deb)
 ```bash
 # Download the .deb package from the latest release
-wget https://github.com/DevprojectEkla/florin/releases/download/v0.3.0/Florin_0.3.0_amd64.deb
+wget https://github.com/DevprojectEkla/florin/releases/download/v0.4.0/Florin_0.4.0_amd64.deb
 
 # Install
-sudo dpkg -i Florin_0.3.0_amd64.deb
+sudo dpkg -i Florin_0.4.0_amd64.deb
 
 # Fix dependencies if needed
 sudo apt-get install -f
@@ -37,10 +37,10 @@ sudo apt-get install -f
 #### Fedora/RHEL/CentOS (.rpm)
 ```bash
 # Download the .rpm package from the latest release
-wget https://github.com/DevprojectEkla/florin/releases/download/v0.3.0/Florin-0.3.0-1.x86_64.rpm
+wget https://github.com/DevprojectEkla/florin/releases/download/v0.4.0/Florin-0.4.0-1.x86_64.rpm
 
 # Install
-sudo rpm -i Florin-0.3.0-1.x86_64.rpm
+sudo rpm -i Florin-0.4.0-1.x86_64.rpm
 ```
 
 #### Arch Linux (.pkg.tar.zst)
@@ -57,15 +57,15 @@ makepkg -si
 
 ### Windows
 
-Download `Florin_0.3.0_x64_en-US.msi` from the [releases page](https://github.com/DevprojectEkla/florin/releases) and run the installer.
+Download `Florin_0.4.0_x64_en-US.msi` from the [releases page](https://github.com/DevprojectEkla/florin/releases) and run the installer.
 
 ### macOS
 
-Download `Florin_0.3.0_universal.dmg` from the [releases page](https://github.com/DevprojectEkla/florin/releases), open it, and drag Florin to your Applications folder.
+Download `Florin_0.4.0_universal.dmg` from the [releases page](https://github.com/DevprojectEkla/florin/releases), open it, and drag Florin to your Applications folder.
 
 ### Android
 
-Download `florin-v0.3.0-android.apk` from the [releases page](https://github.com/DevprojectEkla/florin/releases) and install it on your Android device.
+Download `florin-v0.4.0-android.apk` from the [releases page](https://github.com/DevprojectEkla/florin/releases) and install it on your Android device.
 
 **Installation Steps:**
 1. Enable "Install from Unknown Sources" in your Android device settings
