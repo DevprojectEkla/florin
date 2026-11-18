@@ -5,6 +5,7 @@ import { getPasswordHash } from './db/auth';
 import { isOnboardingComplete } from './db/accounts';
 import AppLayout from './components/layout/AppLayout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { AccountProvider } from './store/AccountContext';
 import { FiscalYearProvider } from './store/FiscalYearContext';
 import { MonthProvider } from './store/MonthContext';
 import { ThemeProvider } from './store/ThemeContext';
@@ -97,6 +98,7 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <HashRouter>
+          <AccountProvider>
           <FiscalYearProvider>
             <MonthProvider>
               <AppLayout>
@@ -112,6 +114,7 @@ export default function App() {
               </AppLayout>
             </MonthProvider>
           </FiscalYearProvider>
+          </AccountProvider>
       </HashRouter>
       </ThemeProvider>
     </ErrorBoundary>

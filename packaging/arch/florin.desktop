@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Florin
+Comment=Privacy-first personal finance tracker
+Exec=florin
+Icon=florin
+Terminal=false
+Categories=Office;Finance;

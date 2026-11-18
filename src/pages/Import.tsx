@@ -13,9 +13,17 @@ import {
   type CsvMapping,
   type CsvTable,
 } from '../lib/csv-import';
+import { useQueryClient } from '@tanstack/react-query';
 import { importTransactions, type ImportResult } from '../db/import';
 import { loadCsvProfile, saveCsvProfile } from '../db/csv-profiles';
-import { useFirstAccount, useActiveFiscalYear } from '../hooks/useAccounts';
+import {
+  createAccount,
+  findAccountByNumber,
+  resolveFiscalYearForDate,
+  updateAccount,
+} from '../db/accounts';
+import { normalizeAccountNumber } from '../lib/accounts';
+import { useActiveAccount } from '../store/AccountContext';
 import CsvMappingStep from '../components/import/CsvMappingStep';
 
 interface CsvSession {
@@ -26,10 +34,17 @@ interface CsvSession {
 
 export default function Import() {
   const { t } = useTranslation();
-  const { data: account } = useFirstAccount();
-  const { data: fiscalYear } = useActiveFiscalYear(account?.id);
+  const qc = useQueryClient();
+  const { accounts, activeAccount, setActiveAccountId } = useActiveAccount();
 
-  const [status, setStatus] = useState<'idle' | 'parsing' | 'mapping' | 'importing' | 'done' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'parsing' | 'mapping' | 'choose_account' | 'importing' | 'done' | 'error'
+  >('idle');
+  // Account the last import went into (may differ from the active account)
+  const [targetAccount, setTargetAccount] = useState<{ id: number; name: string } | null>(null);
+  // "Which account is this file for?" step state
+  const [choice, setChoice] = useState<number | 'new'>(0);
+  const [newAccountName, setNewAccountName] = useState('');
   const [parsed, setParsed] = useState<ParsedImport | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError]   = useState('');
@@ -49,17 +64,89 @@ export default function Import() {
     setStatus('error');
   }
 
+  /**
+   * Route a parsed file to the right account: the one whose number matches the
+   * file's account number, else (when ambiguous) ask the user.
+   */
   async function runImport(parsedData: ParsedImport) {
     setParsed(parsedData);
-    if (!account || !fiscalYear) {
+    if (accounts.length === 0) {
       setError(t('import.error_no_account'));
       setStatus('error');
       return;
     }
+
+    const detected = await findAccountByNumber(parsedData.accountNumber);
+    if (detected) {
+      await importInto(parsedData, detected);
+      return;
+    }
+
+    const hasNumber = normalizeAccountNumber(parsedData.accountNumber) !== '';
+    if (accounts.length === 1 && !hasNumber) {
+      await importInto(parsedData, accounts[0]);
+      return;
+    }
+
+    // Unknown account number, or several accounts and nothing to tell them apart
+    setChoice(activeAccount?.id ?? accounts[0].id);
+    setNewAccountName(
+      parsedData.accountNumber ? `${t('import.account')} ${parsedData.accountNumber}` : ''
+    );
+    setStatus('choose_account');
+  }
+
+  async function importInto(
+    parsedData: ParsedImport,
+    account: { id: number; name: string; bank_name?: string; account_number?: string | null }
+  ) {
     setStatus('importing');
-    const importResult = await importTransactions(parsedData, account.id, fiscalYear.id);
+    const firstDate =
+      parsedData.transactions.map((tx) => tx.date).sort()[0] ??
+      new Date().toISOString().slice(0, 10);
+    const fy = await resolveFiscalYearForDate(account.id, firstDate);
+    const importResult = await importTransactions(parsedData, account.id, fy.id);
+
+    // Remember the number so the next file for this account is matched automatically
+    if (!account.account_number && normalizeAccountNumber(parsedData.accountNumber) !== '') {
+      await updateAccount(account.id, {
+        name: account.name,
+        bank_name: account.bank_name ?? 'Crédit Agricole',
+        account_number: parsedData.accountNumber,
+      });
+    }
+
+    for (const key of ['transactions', 'aggregates', 'balance', 'fiscal-year', 'fiscal-years', 'accounts']) {
+      qc.invalidateQueries({ queryKey: [key] });
+    }
+    setTargetAccount({ id: account.id, name: account.name });
     setResult(importResult);
     setStatus('done');
+  }
+
+  async function handleConfirmAccount() {
+    if (!parsed) return;
+    try {
+      if (choice === 'new') {
+        const name = newAccountName.trim();
+        if (!name) { setError(t('onboarding.error_account_name')); return; }
+        setError('');
+        const id = await createAccount({
+          name,
+          bank_name: 'Crédit Agricole',
+          account_number: parsed.accountNumber ?? undefined,
+        });
+        qc.invalidateQueries({ queryKey: ['accounts'] });
+        await importInto(parsed, { id, name, account_number: parsed.accountNumber });
+        await setActiveAccountId(id);
+      } else {
+        const account = accounts.find((a) => a.id === choice);
+        if (!account) return;
+        await importInto(parsed, account);
+      }
+    } catch (e) {
+      reportError(e);
+    }
   }
 
   async function handleSelectFile() {
@@ -125,6 +212,7 @@ export default function Import() {
     setError('');
     setCsv(null);
     setMapping(null);
+    setTargetAccount(null);
   }
 
   return (
@@ -159,6 +247,68 @@ export default function Import() {
           onConfirm={handleConfirmMapping}
           onCancel={handleReset}
         />
+      )}
+
+      {status === 'choose_account' && parsed && (
+        <div className="card space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-100">{t('import.choose_account_title')}</h2>
+            <p className="text-slate-400 text-sm mt-1">
+              {parsed.accountNumber
+                ? t('import.choose_account_unknown', { number: parsed.accountNumber })
+                : t('import.choose_account_no_number')}
+            </p>
+          </div>
+
+          <fieldset className="space-y-2">
+            <legend className="sr-only">{t('import.choose_account_title')}</legend>
+            {accounts.map((a) => (
+              <label key={a.id} className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="import-account"
+                  checked={choice === a.id}
+                  onChange={() => setChoice(a.id)}
+                />
+                <span className="text-slate-200 text-sm">
+                  {a.name}
+                  {a.account_number && (
+                    <span className="text-slate-500 font-mono ml-2">{a.account_number}</span>
+                  )}
+                </span>
+              </label>
+            ))}
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="import-account"
+                checked={choice === 'new'}
+                onChange={() => setChoice('new')}
+              />
+              <span className="text-slate-200 text-sm">{t('import.choose_account_new')}</span>
+            </label>
+          </fieldset>
+
+          {choice === 'new' && (
+            <div>
+              <label className="block text-sm text-slate-300 mb-1">{t('onboarding.account_name')}</label>
+              <input
+                className="input"
+                value={newAccountName}
+                onChange={(e) => { setNewAccountName(e.target.value); setError(''); }}
+              />
+            </div>
+          )}
+
+          {error && <p role="alert" className="text-red-400 text-sm">{error}</p>}
+
+          <div className="flex gap-3">
+            <button className="btn-ghost flex-1" onClick={handleReset}>{t('common.cancel')}</button>
+            <button className="btn-primary flex-1" onClick={handleConfirmAccount}>
+              {t('import.choose_account_confirm')}
+            </button>
+          </div>
+        </div>
       )}
 
       {status === 'parsing' && (
@@ -201,6 +351,20 @@ export default function Import() {
               <div className="text-xs text-slate-400 mt-1">{t('import.total_in_file')}</div>
             </div>
           </div>
+
+          {targetAccount && (
+            <p className="text-center text-sm text-slate-300">
+              {t('import.imported_into', { account: targetAccount.name })}
+              {targetAccount.id !== activeAccount?.id && (
+                <button
+                  className="ml-2 text-florin-400 underline"
+                  onClick={() => setActiveAccountId(targetAccount.id)}
+                >
+                  {t('account_settings.switch_to')}
+                </button>
+              )}
+            </p>
+          )}
 
           {parsed && (
             <div className="bg-slate-700/50 rounded-lg p-3 text-sm text-slate-300 space-y-1">

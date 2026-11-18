@@ -1,5 +1,7 @@
 import { getDb } from './client';
 import type { Transaction } from '../types';
+import { getLegacyAccountId } from './accounts';
+import { scopeDedupHash } from '../lib/accounts';
 
 export interface TransactionWithCategory extends Transaction {
   category_label: string | null;
@@ -11,7 +13,14 @@ export interface TransactionWithCategory extends Transaction {
 
 export async function getTransactions(
   fiscalYearId: number | null,
-  opts?: { month?: number; year?: number; categoryId?: number; unclassifiedOnly?: boolean }
+  opts?: {
+    month?: number;
+    year?: number;
+    categoryId?: number;
+    unclassifiedOnly?: boolean;
+    /** Restrict to one account (matters in "all years" mode, where fiscalYearId is null). */
+    accountId?: number;
+  }
 ): Promise<TransactionWithCategory[]> {
   const db = await getDb();
   const conditions: string[] = [];
@@ -20,6 +29,11 @@ export async function getTransactions(
   if (fiscalYearId !== null) {
     conditions.push('t.fiscal_year_id = ?');
     params.push(fiscalYearId);
+  }
+
+  if (opts?.accountId !== undefined) {
+    conditions.push('t.account_id = ?');
+    params.push(opts.accountId);
   }
 
   if (opts?.month && opts?.year) {
@@ -53,28 +67,48 @@ export async function getTransactions(
   );
 }
 
-export async function getTransactionCount(fiscalYearId: number | null): Promise<number> {
-  const db = await getDb();
-  if (fiscalYearId === null) {
-    const rows = await db.select<{ n: number }[]>('SELECT COUNT(*) as n FROM transactions');
-    return rows[0]?.n ?? 0;
+/** Build a WHERE clause from optional fiscal-year / account scoping. */
+function scopeClause(
+  fiscalYearId: number | null,
+  accountId: number | undefined,
+  extra?: string
+): { where: string; params: unknown[] } {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  if (fiscalYearId !== null) {
+    conditions.push('fiscal_year_id = ?');
+    params.push(fiscalYearId);
   }
+  if (accountId !== undefined) {
+    conditions.push('account_id = ?');
+    params.push(accountId);
+  }
+  if (extra) conditions.push(extra);
+  return { where: conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '', params };
+}
+
+export async function getTransactionCount(
+  fiscalYearId: number | null,
+  accountId?: number
+): Promise<number> {
+  const db = await getDb();
+  const { where, params } = scopeClause(fiscalYearId, accountId);
   const rows = await db.select<{ n: number }[]>(
-    'SELECT COUNT(*) as n FROM transactions WHERE fiscal_year_id = ?',
-    [fiscalYearId]
+    `SELECT COUNT(*) as n FROM transactions ${where}`,
+    params
   );
   return rows[0]?.n ?? 0;
 }
 
-export async function getUnclassifiedCount(fiscalYearId: number | null): Promise<number> {
+export async function getUnclassifiedCount(
+  fiscalYearId: number | null,
+  accountId?: number
+): Promise<number> {
   const db = await getDb();
-  if (fiscalYearId === null) {
-    const rows = await db.select<{ n: number }[]>('SELECT COUNT(*) as n FROM transactions WHERE category_id IS NULL');
-    return rows[0]?.n ?? 0;
-  }
+  const { where, params } = scopeClause(fiscalYearId, accountId, 'category_id IS NULL');
   const rows = await db.select<{ n: number }[]>(
-    'SELECT COUNT(*) as n FROM transactions WHERE fiscal_year_id = ? AND category_id IS NULL',
-    [fiscalYearId]
+    `SELECT COUNT(*) as n FROM transactions ${where}`,
+    params
   );
   return rows[0]?.n ?? 0;
 }
@@ -145,7 +179,12 @@ export async function insertManualTransaction(input: ManualTransactionInput): Pr
   // Build a dedup hash that won't collide with imported ones
   // Prefix "manual:" makes it inherently distinct from CA-imported hashes
   const amount = input.debit ?? input.credit ?? 0;
-  const baseHash = `manual:${input.date}|${input.label.trim()}|${amount.toFixed(2)}`;
+  const legacyAccountId = await getLegacyAccountId();
+  const baseHash = scopeDedupHash(
+    `manual:${input.date}|${input.label.trim()}|${amount.toFixed(2)}`,
+    input.accountId,
+    legacyAccountId
+  );
 
   // Handle same-day same-amount manual entries (same logic as import)
   const existing = await db.select<{ dedup_hash: string }[]>(
@@ -193,10 +232,12 @@ export interface MonthlyAggregate {
   net: number;
 }
 
-export async function getMonthlyAggregates(fiscalYearId: number | null): Promise<MonthlyAggregate[]> {
+export async function getMonthlyAggregates(
+  fiscalYearId: number | null,
+  accountId?: number
+): Promise<MonthlyAggregate[]> {
   const db = await getDb();
-  const where = fiscalYearId !== null ? 'WHERE fiscal_year_id = ?' : '';
-  const params = fiscalYearId !== null ? [fiscalYearId] : [];
+  const { where, params } = scopeClause(fiscalYearId, accountId);
 
   // For income transactions with an attributed_month override, use that month
   // instead of the transaction date. Debits always use the real date.
@@ -238,7 +279,8 @@ export interface CategoryAggregate {
 export async function getCategoryAggregates(
   fiscalYearId: number | null,
   year?: number,
-  month?: number
+  month?: number,
+  accountId?: number
 ): Promise<CategoryAggregate[]> {
   const db = await getDb();
   const conditions: string[] = [];
@@ -247,6 +289,11 @@ export async function getCategoryAggregates(
   if (fiscalYearId !== null) {
     conditions.push('t.fiscal_year_id = ?');
     params.push(fiscalYearId);
+  }
+
+  if (accountId !== undefined) {
+    conditions.push('t.account_id = ?');
+    params.push(accountId);
   }
 
   if (month && year) {
