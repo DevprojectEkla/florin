@@ -1265,7 +1265,7 @@ dependencies = [
 
 [[package]]
 name = "florin"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "argon2",
  "jni 0.21.1",
