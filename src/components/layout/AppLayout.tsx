@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useFiscalYear } from '../../store/FiscalYearContext';
 import { useViewMonth } from '../../store/MonthContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useActiveAccount } from '../../store/AccountContext';
 
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: '◉',  key: 'nav.dashboard'    },
@@ -19,6 +20,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { allFiscalYears, selected: fiscalYear, selectedId, setSelectedId } = useFiscalYear();
   const { viewYear, viewMonth, setViewMonth } = useViewMonth();
   const { theme, toggleTheme } = useTheme();
+  const { accounts, activeAccount, setActiveAccountId } = useActiveAccount();
   const location = useLocation();
 
   // Pages that show month-level data and benefit from the month selector
@@ -66,6 +68,39 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <span className="text-florin-400 text-2xl font-bold">ƒ</span>
           <span className="text-slate-100 text-xl font-semibold ml-1">lorin</span>
         </div>
+
+        {/* Active account: switcher when several accounts exist, plain info otherwise */}
+        {activeAccount && (
+          <div className="px-3 py-3 border-b border-slate-700 space-y-1.5">
+            {accounts.length > 1 ? (
+              <select
+                aria-label={t('account_settings.title')}
+                className="w-full border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-florin-400"
+                style={
+                  theme === 'light'
+                    ? { backgroundColor: '#ffffff', color: '#0f172a', borderColor: '#cbd5e1' }
+                    : { backgroundColor: '#1e293b', color: '#e2e8f0', borderColor: '#475569' }
+                }
+                value={activeAccount.id}
+                onChange={(e) => setActiveAccountId(parseInt(e.target.value))}
+              >
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="text-sm font-medium text-slate-200 truncate px-1">{activeAccount.name}</div>
+            )}
+            <div className="text-xs text-slate-500 px-1 truncate" title={activeAccount.bank_name}>
+              {activeAccount.bank_name}
+            </div>
+            {activeAccount.account_number && (
+              <div className="text-xs text-slate-500 font-mono px-1 truncate" title={activeAccount.account_number}>
+                {activeAccount.account_number}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Fiscal Year Selector */}
         <div className="px-3 py-3 border-b border-slate-700">

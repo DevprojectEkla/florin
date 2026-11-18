@@ -63,8 +63,60 @@ jobs:
             - **macOS**: Download the `.dmg`, open it, and drag Florin to Applications
             - **Linux (Debian/Ubuntu)**: Download the `.deb` file and run `sudo dpkg -i Florin_*_amd64.deb`
             - **Linux (Fedora/RHEL)**: Download the `.rpm` file and run `sudo rpm -i Florin-*.x86_64.rpm`
+            - **Linux (Arch)**: Download the `.pkg.tar.zst` file and run `sudo pacman -U florin-*.pkg.tar.zst`
             
             For more information, see the [README](https://github.com/DevprojectEkla/florin/blob/main/README.md).
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.platform == 'macos-latest' && '--target universal-apple-darwin' || '' }}
+
+  # Arch Linux package (.pkg.tar.zst), built from packaging/arch/PKGBUILD.
+  # Runs after the draft release exists so the package can be attached to it.
+  arch:
+    needs: release
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    permissions:
+      contents: write
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed git rust nodejs npm pkgconf webkit2gtk-4.1 gtk3 glib2 openssl
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve package version
+        id: version
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          fi
+          # pkgver may not contain hyphens
+          echo "version=${VERSION//-/_}" >> "$GITHUB_OUTPUT"
+
+      # makepkg refuses to run as root, so build as an unprivileged user
+      - name: Build package
+        run: |
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          mkdir -p /tmp/pkgdest && chown builder:builder /tmp/pkgdest
+          su builder -c "cd '$GITHUB_WORKSPACE/packaging/arch' && FLORIN_VERSION='${{ steps.version.outputs.version }}' PKGDEST=/tmp/pkgdest makepkg --noconfirm --cleanbuild"
+          cp /tmp/pkgdest/*.pkg.tar.zst "$GITHUB_WORKSPACE/"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: florin-arch
+          path: florin-*.pkg.tar.zst
+
+      - name: Attach package to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: florin-*.pkg.tar.zst

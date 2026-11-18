@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { useFirstAccount, useActiveFiscalYear } from '../hooks/useAccounts';
+import { useQuery } from '@tanstack/react-query';
+import { useActiveFiscalYear } from '../hooks/useAccounts';
+import { useActiveAccount } from './AccountContext';
 import { getFiscalYears } from '../db/accounts';
 import type { FiscalYear } from '../types';
 
@@ -19,25 +21,26 @@ const FiscalYearCtx = createContext<FiscalYearContextValue>({
 });
 
 export function FiscalYearProvider({ children }: { children: ReactNode }) {
-  const { data: account } = useFirstAccount();
-  const { data: latestFy } = useActiveFiscalYear(account?.id);
-  const [allFYs, setAllFYs] = useState<FiscalYear[]>([]);
+  const { activeAccountId } = useActiveAccount();
+  const { data: latestFy } = useActiveFiscalYear(activeAccountId);
+  const { data: allFYs = [] } = useQuery({
+    queryKey: ['fiscal-years', activeAccountId],
+    queryFn: () => getFiscalYears(activeAccountId!),
+    enabled: !!activeAccountId,
+  });
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  // Account for which the default fiscal year has already been chosen
+  const [initializedFor, setInitializedFor] = useState<number | undefined>(undefined);
 
-  // Load all fiscal years
+  // Default to the latest FY on first load and whenever the account changes.
+  // `latestFy === undefined` means "still loading"; `null` means "no FY yet".
   useEffect(() => {
-    if (!account) return;
-    getFiscalYears(account.id).then(setAllFYs);
-  }, [account]);
-
-  // Default to latest FY only on first initialization
-  useEffect(() => {
-    if (!hasInitialized && latestFy) {
-      setSelectedId(latestFy.id);
-      setHasInitialized(true);
+    if (activeAccountId === undefined || latestFy === undefined) return;
+    if (initializedFor !== activeAccountId) {
+      setSelectedId(latestFy?.id ?? null);
+      setInitializedFor(activeAccountId);
     }
-  }, [latestFy, hasInitialized]);
+  }, [latestFy, activeAccountId, initializedFor]);
 
   const selected = allFYs.find((fy) => fy.id === selectedId) ?? null;
 

@@ -1,6 +1,7 @@
 import { getDb } from './client';
 import { dedupKey } from '../lib/utils';
-import { resolveFiscalYearForDate } from './accounts';
+import { resolveFiscalYearForDate, getLegacyAccountId } from './accounts';
+import { scopeDedupHash } from '../lib/accounts';
 import type { ParsedImport } from '../lib/ca-parser';
 
 export interface ImportResult {
@@ -23,6 +24,7 @@ export async function importTransactions(
   fiscalYearId: number
 ): Promise<ImportResult> {
   const db = await getDb();
+  const legacyAccountId = await getLegacyAccountId();
 
   // 1. Create import batch
   const batchResult = await db.execute(
@@ -62,7 +64,13 @@ export async function importTransactions(
 
   for (const tx of parsed.transactions) {
     const amount = tx.debit ?? tx.credit ?? 0;
-    const baseHash = generateHash(tx.date, tx.label, amount);
+    // Scope the hash per account so identical operations on two different
+    // accounts don't collide on the global UNIQUE(dedup_hash) constraint.
+    const baseHash = scopeDedupHash(
+      generateHash(tx.date, tx.label, amount),
+      accountId,
+      legacyAccountId
+    );
 
     // Increment occurrence counter for this file
     const occurrence = (hashCountInFile.get(baseHash) ?? 0) + 1;

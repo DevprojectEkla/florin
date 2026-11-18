@@ -5,8 +5,11 @@ import {
   createAccount,
   createFiscalYear,
   isOnboardingComplete,
+  updateAccount,
+  setFiscalYearOpeningBalance,
   type CreateAccountInput,
   type CreateFiscalYearInput,
+  type UpdateAccountInput,
 } from '../db/accounts';
 
 export function useOnboardingStatus() {
@@ -37,7 +40,20 @@ export function useCreateAccount() {
     mutationFn: (input: CreateAccountInput) => createAccount(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['account'] });
+      qc.invalidateQueries({ queryKey: ['accounts'] });
       qc.invalidateQueries({ queryKey: ['onboarding'] });
+    },
+  });
+}
+
+export function useUpdateAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: number; input: UpdateAccountInput }) =>
+      updateAccount(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['account'] });
+      qc.invalidateQueries({ queryKey: ['accounts'] });
     },
   });
 }
@@ -48,7 +64,22 @@ export function useCreateFiscalYear() {
     mutationFn: (input: CreateFiscalYearInput) => createFiscalYear(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fiscal-year'] });
+      qc.invalidateQueries({ queryKey: ['fiscal-years'] });
       qc.invalidateQueries({ queryKey: ['onboarding'] });
+    },
+  });
+}
+
+/** Administrative: overwrite a fiscal year's opening balance (balance is anchored on it). */
+export function useSetOpeningBalance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ fiscalYearId, openingBalance }: { fiscalYearId: number; openingBalance: number | null }) =>
+      setFiscalYearOpeningBalance(fiscalYearId, openingBalance),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fiscal-year'] });
+      qc.invalidateQueries({ queryKey: ['fiscal-years'] });
+      qc.invalidateQueries({ queryKey: ['balance'] });
     },
   });
 }
