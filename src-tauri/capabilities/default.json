@@ -18,6 +18,8 @@
     "fs:allow-write-text-file",
     "fs:allow-mkdir",
     "fs:allow-exists",
+    "updater:default",
+    "process:allow-restart",
     {
       "identifier": "fs:scope",
       "allow": [

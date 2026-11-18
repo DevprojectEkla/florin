@@ -315,7 +315,8 @@
       "rules":      "Auto rules",
       "language":   "Language",
       "account":    "Account",
-      "security":   "Security"
+      "security":   "Security",
+      "updates":    "Updates"
     },
     "language": {
       "label": "Interface language",
@@ -423,6 +424,23 @@
     "search": "Search in the file",
     "rows_shown": "{{shown}} of {{total}} rows",
     "read_error": "Could not read the stored file"
+  },
+  "updates": {
+    "title": "Updates",
+    "current_version": "Current version: v{{version}}",
+    "check_now": "Check for updates",
+    "checking": "Checking…",
+    "up_to_date": "Florin is up to date",
+    "check_error": "Could not check for updates. Check your connection and try again.",
+    "available": "Version {{version}} is available",
+    "install": "Download and install",
+    "installing": "Installing…",
+    "install_error": "The update could not be installed. You can download it from the release page instead.",
+    "restart_note": "Florin restarts to finish the update. Your data is kept.",
+    "managed_externally": "This installation is updated through your package manager or app store.",
+    "open_release_page": "Open the release page",
+    "auto_check": "Check for updates at launch",
+    "auto_check_hint": "Contacts GitHub once when the app starts. No personal data is sent."
   },
   "account_settings": {
     "title": "Accounts",

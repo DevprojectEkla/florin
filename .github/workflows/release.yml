@@ -52,6 +52,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signs the update bundles; the matching public key is in tauri.conf.json
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Florin ${{ github.ref_name }}'
@@ -68,6 +71,8 @@ jobs:
             For more information, see the [README](https://github.com/DevprojectEkla/florin/blob/main/README.md).
           releaseDraft: true
           prerelease: false
+          # latest.json + .sig files, read by the in-app updater
+          includeUpdaterJson: true
           args: ${{ matrix.platform == 'macos-latest' && '--target universal-apple-darwin' || '' }}
 
   # Arch Linux package (.pkg.tar.zst), built from packaging/arch/PKGBUILD.
