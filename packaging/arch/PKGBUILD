@@ -24,8 +24,10 @@ _root="$startdir/../.."
 build() {
   cd "$_root"
   npm ci
-  # --no-bundle: only the release binary is needed, pacman does the packaging
-  npm run tauri build -- --no-bundle
+  # --no-bundle: only the release binary is needed, pacman does the packaging.
+  # Updater artifacts need the release signing key, which isn't available here
+  # (and pacman, not the in-app updater, updates this package), so turn them off.
+  npm run tauri build -- --no-bundle --config '{"bundle":{"createUpdaterArtifacts":false}}'
 }
 
 package() {

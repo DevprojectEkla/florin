@@ -7,6 +7,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import RuleEditor from '../components/ui/RuleEditor';
 import AccountSection from '../components/settings/AccountSection';
 import SecuritySection from '../components/settings/SecuritySection';
+import UpdatesSection from '../components/settings/UpdatesSection';
 import {
   useAllCategories,
   useCreateCategory,
@@ -15,7 +16,7 @@ import {
 } from '../hooks/useCategories';
 import type { Category, CategoryType } from '../types';
 
-const SECTION_KEYS = ['account', 'categories', 'rules', 'security', 'language'] as const;
+const SECTION_KEYS = ['account', 'categories', 'rules', 'security', 'language', 'updates'] as const;
 type Section = typeof SECTION_KEYS[number];
 
 const TYPE_ORDER: CategoryType[] = ['income', 'fixed', 'variable', 'savings', 'capital', 'transfer'];
@@ -58,6 +59,7 @@ export default function Settings() {
         {section === 'rules'      && <RuleEditor />}
         {section === 'security'   && <SecuritySection />}
         {section === 'language'   && <LanguageSection />}
+        {section === 'updates'    && <UpdatesSection />}
       </div>
     </div>
   );

@@ -24,7 +24,16 @@
     }
   },
   "plugins": {
-    "sql": {}
+    "sql": {},
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJGMjNFODg1MjcyREJEMTAKUldRUXZTMG5oZWdqdjdNeEFsNUFZVzZ5ZDJLd3dONll4MHhtclJyV0VpOUxINDJ0QUt1RzFIQVUK",
+      "endpoints": [
+        "https://github.com/DevprojectEkla/florin/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   },
   "bundle": {
     "active": true,
@@ -35,6 +44,7 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true
   }
 }

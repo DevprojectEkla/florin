@@ -5,6 +5,7 @@ import { useFiscalYear } from '../../store/FiscalYearContext';
 import { useViewMonth } from '../../store/MonthContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useActiveAccount } from '../../store/AccountContext';
+import { useUpdateCheck } from '../../hooks/useUpdateCheck';
 
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: '◉',  key: 'nav.dashboard'    },
@@ -21,6 +22,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { viewYear, viewMonth, setViewMonth } = useViewMonth();
   const { theme, toggleTheme } = useTheme();
   const { accounts, activeAccount, setActiveAccountId } = useActiveAccount();
+  // Quiet launch check: only used to flag a new version in the sidebar
+  const { data: update } = useUpdateCheck();
   const location = useLocation();
 
   // Pages that show month-level data and benefit from the month selector
@@ -164,6 +167,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             >
               <span className="text-base w-5 text-center">{icon}</span>
               {t(key)}
+              {to === '/settings' && update?.available && (
+                <span
+                  className="ml-auto w-2 h-2 rounded-full bg-florin-400"
+                  role="img"
+                  aria-label={t('updates.available', { version: update.version })}
+                  title={t('updates.available', { version: update.version })}
+                />
+              )}
             </NavLink>
           ))}
         </nav>
