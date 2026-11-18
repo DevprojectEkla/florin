@@ -214,7 +214,7 @@
 
 /* Table rows and list items */
 .light tr:hover {
-  background-color: rgb(248 250 252) !important;
+  background-color: rgb(241 245 249) !important; /* slate-100 */
 }
 
 /* Settings page sections */
@@ -493,6 +493,13 @@ h1 {
   text-align: center;
 }
 
+/*
+ * Base look for inputs/buttons that carry no Tailwind background/color classes.
+ * (Leftover of the Vite/Tauri template: it used to paint a white — or, with an
+ * OS dark preference, near-black — background on every bare button, which made
+ * e.g. the inactive "Pages" toggle and the modal close cross unreadable in
+ * light mode.) Colors now follow the app theme instead of the OS preference.
+ */
 input,
 button {
   border-radius: 8px;
@@ -501,10 +508,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
+  color: var(--text-primary);
+  background-color: transparent;
   transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 button {
@@ -516,7 +523,6 @@ button:hover {
 }
 button:active {
   border-color: #396cd8;
-  background-color: #e8e8e8;
 }
 
 input,
@@ -538,14 +544,6 @@ button {
     color: #24c8db;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
 }
 
 
@@ -574,4 +572,125 @@ button {
 
 .light .preset-chip-save {
   @apply bg-emerald-50 border-emerald-400 text-emerald-700 hover:bg-emerald-100;
+}
+
+
+/* ===== Checkboxes =====
+ * Native checkboxes are near-invisible on white, and the `bg-slate-*` /
+ * `border-slate-*` utilities on them are remapped to very light greys in light
+ * mode. Draw our own, with an explicit border, a clear hover and a check mark.
+ */
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: 2px solid rgb(148 163 184); /* slate-400 */
+  border-radius: 0.25rem;
+  background-color: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color 0.12s, background-color 0.12s, box-shadow 0.12s;
+}
+
+input[type="checkbox"]::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.6rem;
+  background-color: rgb(15 23 42); /* slate-900 */
+  transform: scale(0);
+  transition: transform 0.1s ease-in-out;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+input[type="checkbox"]:hover {
+  border-color: rgb(234 179 8); /* florin-500 */
+  background-color: rgb(234 179 8 / 0.2);
+}
+
+input[type="checkbox"]:checked,
+input[type="checkbox"]:indeterminate {
+  border-color: rgb(234 179 8);
+  background-color: rgb(234 179 8);
+}
+
+input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+/* "Some selected" state of the select-all box: a dash instead of a tick */
+input[type="checkbox"]:indeterminate::before {
+  clip-path: none;
+  width: 0.55rem;
+  height: 2px;
+  transform: scale(1);
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgb(234 179 8);
+  outline-offset: 2px;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Light mode: darker border + white fill so the box stands out on white rows */
+.light input[type="checkbox"]:not(:checked):not(:indeterminate) {
+  background-color: rgb(255 255 255) !important;
+  border-color: rgb(100 116 139) !important; /* slate-500 */
+}
+
+.light input[type="checkbox"]:not(:checked):not(:indeterminate):hover {
+  background-color: rgb(254 249 195) !important; /* florin-100 */
+  border-color: rgb(202 138 4) !important;       /* florin-600 */
+}
+
+.light input[type="checkbox"]:checked,
+.light input[type="checkbox"]:indeterminate {
+  background-color: rgb(234 179 8) !important;
+  border-color: rgb(161 98 7) !important; /* florin-700 */
+}
+
+
+/* ===== Modal close cross ===== */
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: rgb(148 163 184); /* slate-400 */
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: color 0.12s, background-color 0.12s;
+}
+
+.modal-close:hover {
+  background-color: rgb(51 65 85 / 0.7); /* slate-700 */
+  color: rgb(248 250 252);
+  border-color: transparent;
+}
+
+.light .modal-close {
+  color: rgb(71 85 105); /* slate-600 */
+}
+
+.light .modal-close:hover {
+  background-color: rgb(226 232 240); /* slate-200 */
+  color: rgb(15 23 42);
+}
+
+.modal-close:focus-visible {
+  outline: 2px solid rgb(234 179 8);
+  outline-offset: 1px;
 }
