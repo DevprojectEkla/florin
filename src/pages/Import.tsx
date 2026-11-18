@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { readFile } from '@tauri-apps/plugin-fs';
@@ -15,6 +16,8 @@ import {
 } from '../lib/csv-import';
 import { useQueryClient } from '@tanstack/react-query';
 import { importTransactions, type ImportResult } from '../db/import';
+import { deleteTransactions } from '../db/transactions';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { loadCsvProfile, saveCsvProfile } from '../db/csv-profiles';
 import {
   createAccount,
@@ -45,6 +48,9 @@ export default function Import() {
   // "Which account is this file for?" step state
   const [choice, setChoice] = useState<number | 'new'>(0);
   const [newAccountName, setNewAccountName] = useState('');
+  // Raw bytes of the file being imported, kept so a copy can be stored with the import
+  const sourceRef = useRef<Uint8Array | null>(null);
+  const [confirmRemoveExtras, setConfirmRemoveExtras] = useState(false);
   const [parsed, setParsed] = useState<ParsedImport | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError]   = useState('');
@@ -105,7 +111,9 @@ export default function Import() {
       parsedData.transactions.map((tx) => tx.date).sort()[0] ??
       new Date().toISOString().slice(0, 10);
     const fy = await resolveFiscalYearForDate(account.id, firstDate);
-    const importResult = await importTransactions(parsedData, account.id, fy.id);
+    const importResult = await importTransactions(parsedData, account.id, fy.id, {
+      sourceBytes: sourceRef.current ?? undefined,
+    });
 
     // Remember the number so the next file for this account is matched automatically
     if (!account.account_number && normalizeAccountNumber(parsedData.accountNumber) !== '') {
@@ -116,7 +124,7 @@ export default function Import() {
       });
     }
 
-    for (const key of ['transactions', 'aggregates', 'balance', 'fiscal-year', 'fiscal-years', 'accounts']) {
+    for (const key of ['transactions', 'aggregates', 'balance', 'fiscal-year', 'fiscal-years', 'accounts', 'import-history']) {
       qc.invalidateQueries({ queryKey: [key] });
     }
     setTargetAccount({ id: account.id, name: account.name });
@@ -168,6 +176,7 @@ export default function Import() {
 
       // Read file
       const fileBytes = await readFile(filePath);
+      sourceRef.current = fileBytes;
 
       if (isCsv) {
         // CSV layouts differ per bank: detect, then let the user review the mapping.
@@ -213,11 +222,37 @@ export default function Import() {
     setCsv(null);
     setMapping(null);
     setTargetAccount(null);
+    sourceRef.current = null;
+    setConfirmRemoveExtras(false);
+  }
+
+  async function handleRemoveExtras() {
+    if (!result) return;
+    try {
+      await deleteTransactions(result.extras.map((e) => e.id));
+      for (const key of ['transactions', 'aggregates', 'balance']) {
+        qc.invalidateQueries({ queryKey: [key] });
+      }
+      setResult({
+        ...result,
+        rowsInPeriod: result.rowsInPeriod - result.extras.length,
+        extras: [],
+      });
+    } catch (e) {
+      reportError(e);
+    } finally {
+      setConfirmRemoveExtras(false);
+    }
   }
 
   return (
     <div className={`p-6 mx-auto ${status === 'mapping' ? 'max-w-3xl' : 'max-w-2xl'}`}>
-      <h1 className="text-2xl font-bold text-slate-100 mb-2">{t('import.title')}</h1>
+      <div className="flex items-start justify-between gap-4 mb-2">
+        <h1 className="text-2xl font-bold text-slate-100">{t('import.title')}</h1>
+        <Link to="/import/history" className="btn-ghost text-sm whitespace-nowrap">
+          🗂 {t('import_history.link')}
+        </Link>
+      </div>
       <p className="text-slate-400 text-sm mb-6">{t('import.subtitle')}</p>
 
       {status === 'idle' && (
@@ -352,6 +387,8 @@ export default function Import() {
             </div>
           </div>
 
+          <ImportCheck result={result} onReview={() => setConfirmRemoveExtras(true)} />
+
           {targetAccount && (
             <p className="text-center text-sm text-slate-300">
               {t('import.imported_into', { account: targetAccount.name })}
@@ -384,6 +421,18 @@ export default function Import() {
         </div>
       )}
 
+      {result && (
+        <ConfirmDialog
+          open={confirmRemoveExtras}
+          danger
+          title={t('import.extras_confirm_title')}
+          message={t('import.extras_confirm_message', { count: result.extras.length })}
+          confirmLabel={t('import.extras_remove')}
+          onConfirm={handleRemoveExtras}
+          onCancel={() => setConfirmRemoveExtras(false)}
+        />
+      )}
+
       {status === 'error' && (
         <div className="card space-y-4">
           <div className="text-center py-4">
@@ -394,6 +443,60 @@ export default function Import() {
             {t('import.retry')}
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── File vs app check ───────────────────────────────────────────────────────
+
+/** Compares the file with what the app holds on the same period. */
+function ImportCheck({ result, onReview }: { result: ImportResult; onReview: () => void }) {
+  const { t } = useTranslation();
+  const manual = Math.max(0, result.rowsInPeriod - result.rowsInFile - result.extras.length);
+  const ok = result.extras.length === 0;
+
+  return (
+    <div
+      className={`rounded-lg p-3 text-sm space-y-2 ${
+        ok ? 'bg-green-500/10 text-green-300' : 'bg-amber-500/10 text-amber-300'
+      }`}
+      role={ok ? 'status' : 'alert'}
+    >
+      <p className="font-medium">
+        {ok ? '✅ ' : '⚠️ '}
+        {ok ? t('import.check_ok') : t('import.check_mismatch', { count: result.extras.length })}
+      </p>
+      <p className="text-xs opacity-80">
+        {t('import.check_counts', {
+          file: result.rowsInFile,
+          app: result.rowsInPeriod,
+          from: result.periodFrom ?? '—',
+          to: result.periodTo ?? '—',
+        })}
+        {manual > 0 && ` ${t('import.check_manual', { count: manual })}`}
+      </p>
+
+      {!ok && (
+        <>
+          <ul className="text-xs font-mono space-y-0.5 max-h-40 overflow-y-auto">
+            {result.extras.map((e) => (
+              <li key={e.id} className="flex gap-2">
+                <span className="flex-shrink-0">{e.date}</span>
+                <span className="truncate flex-1" title={e.label}>{e.label.replace(/\s+/g, ' ')}</span>
+                <span className="flex-shrink-0">
+                  {e.debit ? `-${e.debit.toFixed(2)}` : `+${(e.credit ?? 0).toFixed(2)}`}
+                </span>
+                <span className="flex-shrink-0 opacity-70">
+                  {t(e.reason === 'duplicate' ? 'import.extra_duplicate' : 'import.extra_not_in_file')}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <button className="btn-ghost text-xs" onClick={onReview}>
+            🗑 {t('import.extras_remove')}
+          </button>
+        </>
       )}
     </div>
   );
