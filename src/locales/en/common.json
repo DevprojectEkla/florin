@@ -228,6 +228,8 @@
     "view_categories": "By category",
     "view_raw": "All transactions",
     "raw_title": "All transactions of the month",
+    "raw_count": "{{count}} transactions",
+    "month_view_label": "Month view",
     "year_total":         "Year total",
     "bank_balance":       "Bank balance",
     "opening_balance":    "Opening balance",
