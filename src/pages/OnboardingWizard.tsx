@@ -128,7 +128,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
                   className="input"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder="00032999227"
+                  placeholder="00012345678"
                 />
               </div>
 

@@ -14,8 +14,8 @@ const HEADER_ROWS = [
   ['Téléchargement du 26/10/2024'],
   [],
   [],
-  ['M.       RAPHAEL BORALEVI'],
-  ['Compte de Dépôt n° 00032999227'],
+  ['M.       JEAN EXEMPLE'],
+  ['Compte de Dépôt n° 00012345678'],
   [],
   [null, 'Solde au 26/10/2024', ' 1\u00a0032,86 €', null],
   [],
@@ -28,7 +28,7 @@ describe('CA xlsx parser', () => {
     const rows = [...HEADER_ROWS, [new Date('2024-10-25'), 'TEST', 10, null]];
     const buffer = buildMockXlsx(rows);
     const result = parseCAFile(buffer, 'test.xlsx');
-    expect(result.accountNumber).toBe('00032999227');
+    expect(result.accountNumber).toBe('00012345678');
   });
 
   it('extracts period from/to', () => {

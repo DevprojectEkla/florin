@@ -4,7 +4,7 @@
 
 /**
  * Normalise a bank account number for comparison: keep letters/digits only,
- * uppercase, and drop leading zeros ("00032999227" and "32999227" match).
+ * uppercase, and drop leading zeros ("00012345678" and "12345678" match).
  * Returns '' when nothing usable is left.
  */
 export function normalizeAccountNumber(raw: string | null | undefined): string {

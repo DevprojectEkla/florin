@@ -111,7 +111,7 @@ function normalizeHeaderCell(cell: unknown): string {
 }
 
 export function extractAccountNumber(rows: unknown[][]): string | null {
-  // Row 5: "Compte de Dépôt n° 00032999227"
+  // Row 5: "Compte de Dépôt n° 00012345678"
   for (let i = 0; i < Math.min(10, rows.length); i++) {
     const cell = String(rows[i]?.[0] ?? '');
     const match = cell.match(/n°\s*(\d+)/);

@@ -1,6 +1,7 @@
 /**
- * Dev-only seed: pre-creates password, accounts, fiscal years, and imports
- * all historical transactions from the extracted ComptaRB data.
+ * Dev-only seed: pre-creates password, a demo account, fiscal years, and
+ * imports two years of SYNTHETIC transactions (see synthetic-seed.ts).
+ * No real personal data lives in this repository.
  *
  * Default password: testtest
  */
@@ -9,12 +10,7 @@ import { setPasswordHash } from './auth';
 import { getFirstAccount, createAccount, createFiscalYear, getFiscalYears } from './accounts';
 import { getDb } from './client';
 import { dedupKey } from '../lib/utils';
-import seedData from './seed-data.json';
-
-interface SeedStructure {
-  fiscal_years: { label: string; start_year: number; start_month: number; opening_balance: number }[];
-  transactions: Record<string, { date: string; label: string; debit: number | null; credit: number | null; category_slug: string | null }[]>;
-}
+import { generateSyntheticSeed, DEMO_ACCOUNT_NUMBER, type SeedStructure } from './synthetic-seed';
 
 export async function devSeedAuth(): Promise<void> {
   try {
@@ -35,14 +31,14 @@ export async function devSeedAuth(): Promise<void> {
       const id = await createAccount({
         name: 'Compte Courant',
         bank_name: 'Crédit Agricole',
-        account_number: '00032999227',
+        account_number: DEMO_ACCOUNT_NUMBER,
       });
-      account = { id, name: 'Compte Courant', bank_name: 'Crédit Agricole', account_number: '00032999227', currency: 'EUR', is_active: true, created_at: '' };
+      account = { id, name: 'Compte Courant', bank_name: 'Crédit Agricole', account_number: DEMO_ACCOUNT_NUMBER, currency: 'EUR', is_active: true, created_at: '' };
       if (import.meta.env.DEV) console.log('[dev-seed] Account created');
     }
 
     // Seed fiscal years
-    const data = seedData as unknown as SeedStructure;
+    const data: SeedStructure = generateSyntheticSeed();
     const existingFYs = await getFiscalYears(account.id);
 
     for (const fy of data.fiscal_years) {

@@ -197,7 +197,7 @@ function AccountForm({ title, initial, error, saving, onSubmit, onCancel }: {
           className="input font-mono"
           value={values.account_number}
           onChange={set('account_number')}
-          placeholder="00032999227"
+          placeholder="00012345678"
         />
         <p className="text-slate-500 text-xs mt-1">{t('account_settings.number_hint')}</p>
       </div>

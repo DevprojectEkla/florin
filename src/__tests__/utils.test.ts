@@ -78,15 +78,15 @@ import { splitLabel } from '../lib/utils';
 
 describe('splitLabel', () => {
   it('splits PAIEMENT PAR CARTE with card number', () => {
-    const result = splitLabel('PAIEMENT PAR CARTE      X0475 INTER PAKAMA 92 CLIC 29/08');
+    const result = splitLabel('PAIEMENT PAR CARTE      X0475 CARREFOUR MARKET 75 PARIS 29/08');
     expect(result.type).toBe('Carte');
-    expect(result.detail).toBe('INTER PAKAMA 92 CLIC 29/08');
+    expect(result.detail).toBe('CARREFOUR MARKET 75 PARIS 29/08');
   });
 
   it('splits VIREMENT EMIS', () => {
-    const result = splitLabel('VIREMENT EMIS           VIR INST vers SARL NOVAGENCE IMM Loyer');
+    const result = splitLabel('VIREMENT EMIS           VIR INST vers SARL AGENCE DU PARC IMM Loyer');
     expect(result.type).toBe('Virement émis');
-    expect(result.detail).toBe('VIR INST vers SARL NOVAGENCE IMM Loyer');
+    expect(result.detail).toBe('VIR INST vers SARL AGENCE DU PARC IMM Loyer');
   });
 
   it('splits VIREMENT EN VOTRE FAVEUR', () => {
