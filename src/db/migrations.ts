@@ -272,19 +272,14 @@ export const MIGRATIONS: string[] = [
 
   // ── Migration 008 — fix PEA-PME misclassification & add Bourse Direct rules
   `
-  -- Recategorise transactions towards account 00000002 (PEA-PME) that were
-  -- incorrectly tagged as savings.pea
-  UPDATE transactions
-  SET category_id = (SELECT id FROM categories WHERE slug = 'savings.pea_pme')
-  WHERE category_id = (SELECT id FROM categories WHERE slug = 'savings.pea')
-    AND label LIKE '%00000002%';
+  -- (A one-off recategorisation tied to a specific brokerage account number
+  -- used to live here; it was personal data and has been removed. Databases
+  -- that already applied this migration are unaffected.)
 
-  -- Add high-priority classification rules for Bourse Direct account numbers
-  -- so future imports are routed correctly without manual intervention.
+  -- Add high-priority classification rules for PEA / PEA-PME / Bourse Direct
+  -- labels so future imports are routed correctly without manual intervention.
   INSERT OR IGNORE INTO classification_rules (pattern, pattern_type, category_id, priority, is_active)
   VALUES
-    ('00000001',  'contains', (SELECT id FROM categories WHERE slug = 'savings.pea'),     120, 1),
-    ('00000002',  'contains', (SELECT id FROM categories WHERE slug = 'savings.pea_pme'), 120, 1),
     ('PEA PME',   'contains', (SELECT id FROM categories WHERE slug = 'savings.pea_pme'), 115, 1),
     ('PEA/PME',   'contains', (SELECT id FROM categories WHERE slug = 'savings.pea_pme'), 115, 1),
     ('versement PEA', 'contains', (SELECT id FROM categories WHERE slug = 'savings.pea'), 110, 1),

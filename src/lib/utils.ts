@@ -38,8 +38,8 @@ const OPERATION_TYPES = [
 
 /**
  * Split a CA bank label into operation type and detail.
- * e.g. "PAIEMENT PAR CARTE      X0475 CARREFOUR MARKET 92 CLIC 29/08"
- *   → { type: "Paiement carte", detail: "CARREFOUR MARKET 92 CLIC 29/08" }
+ * e.g. "PAIEMENT PAR CARTE      X0475 CARREFOUR MARKET 75 PARIS 29/08"
+ *   → { type: "Paiement carte", detail: "CARREFOUR MARKET 75 PARIS 29/08" }
  */
 export function splitLabel(label: string): { type: string; detail: string } {
   const upper = label.toUpperCase();

@@ -48,3 +48,12 @@ src-tauri/gen/android/build/
 scripts/
 .agents/
 imports
+
+# Never commit real bank data
+*.xlsx
+*.xls
+*.ods
+*.db
+*.db-wal
+*.db-shm
+**/seed-data.json

@@ -163,7 +163,7 @@ export default function RuleEditor() {
               className="input font-mono"
               value={pattern}
               onChange={(e) => setPattern(e.target.value)}
-              placeholder="AGENCE DU PARC"
+              placeholder="CARREFOUR"
               autoFocus
             />
           </div>
